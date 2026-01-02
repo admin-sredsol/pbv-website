@@ -6,22 +6,40 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID!;
-const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID!;
-const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY!;
-const R2_ENDPOINT = `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`.replace(
-  /\/$/,
-  "",
+const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
+const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
+const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
+const R2_ENDPOINT = R2_ACCOUNT_ID
+  ? `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`.replace(/\/$/, "")
+  : undefined;
+
+const R2_ENABLED = !!(
+  R2_ACCOUNT_ID &&
+  R2_ACCESS_KEY_ID &&
+  R2_SECRET_ACCESS_KEY &&
+  R2_ENDPOINT
 );
 
-const client = new S3Client({
-  region: "auto",
-  endpoint: R2_ENDPOINT,
-  credentials: {
-    accessKeyId: R2_ACCESS_KEY_ID,
-    secretAccessKey: R2_SECRET_ACCESS_KEY,
-  },
-});
+let client: S3Client | null = null;
+if (R2_ENABLED) {
+  client = new S3Client({
+    region: "auto",
+    endpoint: R2_ENDPOINT,
+    credentials: {
+      accessKeyId: R2_ACCESS_KEY_ID!,
+      secretAccessKey: R2_SECRET_ACCESS_KEY!,
+    },
+  });
+} else {
+  // During builds (for example inside Docker) these env vars are often not set.
+  // Log a warning and let helper functions return empty results to avoid build-time failures.
+  // This makes static builds safe even when R2 credentials aren't present.
+  // When running in production, ensure the environment variables are provided.
+  // eslint-disable-next-line no-console
+  console.warn(
+    "R2 not configured: R2_ACCOUNT_ID / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY are not set. R2 helper functions will return empty results.",
+  );
+}
 
 /**
  * List files in a Cloudflare R2 bucket under a given prefix.
