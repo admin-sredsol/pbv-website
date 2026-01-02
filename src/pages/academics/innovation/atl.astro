@@ -1,0 +1,441 @@
+---
+import type { Feature } from "../../../types/feature";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import SectionHeader from "../../../components/academics/SectionHeader.astro";
+import Button from "../../../components/ui/Button.astro";
+import { Cpu, Wrench, Users, Trophy, Shield, Link } from "lucide-astro";
+
+/**
+ * /academics/innovation/atl
+ *
+ * Atal Tinkering Lab (ATL) page
+ *
+ * Follows the site's established design patterns:
+ * - SectionHeader for page intro
+ * - Feature cards with icon, description and small CTA
+ * - Section anchors for quick navigation
+ */
+
+const headerContent = {
+    eyebrow: "Innovation",
+    title: "Atal Tinkering Lab (ATL)",
+    description:
+        "The ATL fosters curiosity, maker skills and a problem-solving mindset. Students explore electronics, robotics, 3D printing and prototyping through guided and student-led projects.",
+    button: {
+        text: "Innovation Hub",
+        link: "/academics/innovation",
+        variant: "ghostDark",
+    },
+} as const;
+
+const features: Feature[] = [
+    {
+        icon: Cpu,
+        title: "Tools & Equipment",
+        description:
+            "State-of-the-art 3D printers, microcontrollers (Arduino/Raspberry Pi), sensors, electronics kits, CAD stations and fabrication tools to support prototyping.",
+        cta: { text: "See Equipment", href: "#equipment", variant: "primary" },
+    },
+    {
+        icon: Wrench,
+        title: "Programs & Mentorship",
+        description:
+            "Workshops, guided modules, club mentorship and teacher-led design sprints help learners take ideas from concept to working prototype.",
+        cta: { text: "Programs", href: "#programs", variant: "ghostDark" },
+    },
+    {
+        icon: Users,
+        title: "Community & Partnerships",
+        description:
+            "Partnerships with universities, industry and alumni provide mentorship, guest workshops and project sponsorships for student teams.",
+        cta: {
+            text: "Partnerships",
+            href: "#partnerships",
+            variant: "ghostDark",
+        },
+    },
+    {
+        icon: Trophy,
+        title: "Competitions & Showcases",
+        description:
+            "Inter-school challenges, fairs and exhibition days give students the opportunity to present work, compete and learn from peers.",
+        cta: { text: "Exhibitions", href: "#outcomes", variant: "primary" },
+    },
+];
+---
+
+<BaseLayout title="Atal Tinkering Lab (ATL)">
+    <main class="site-container px-4 py-12">
+        <SectionHeader content={headerContent} />
+
+        <!-- Quick nav cards -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 mb-10">
+            <a
+                href="#equipment"
+                class="p-6 rounded-lg border border-black bg-background/90 hover:shadow-md"
+            >
+                <div
+                    class="w-12 h-12 flex items-center justify-center rounded-lg mb-4 bg-primary"
+                >
+                    <Cpu size={22} class="text-white" />
+                </div>
+                <div class="text-eyebrow mb-2">Equipment</div>
+                <h3 class="text-h5 mb-2">Makerspace tools & kits</h3>
+                <p class="text-sm opacity-80">
+                    An inventory of tools and safe-use procedures for student
+                    projects.
+                </p>
+            </a>
+
+            <a
+                href="#programs"
+                class="p-6 rounded-lg border border-black bg-background/90 hover:shadow-md"
+            >
+                <div
+                    class="w-12 h-12 flex items-center justify-center rounded-lg mb-4 bg-primary"
+                >
+                    <Wrench size={22} class="text-white" />
+                </div>
+                <div class="text-eyebrow mb-2">Programs</div>
+                <h3 class="text-h5 mb-2">Workshops & clubs</h3>
+                <p class="text-sm opacity-80">
+                    Structured modules, clubs and mentorship to build design and
+                    engineering skills.
+                </p>
+            </a>
+
+            <a
+                href="#partnerships"
+                class="p-6 rounded-lg border border-black bg-background/90 hover:shadow-md"
+            >
+                <div
+                    class="w-12 h-12 flex items-center justify-center rounded-lg mb-4 bg-primary"
+                >
+                    <Users size={22} class="text-white" />
+                </div>
+                <div class="text-eyebrow mb-2">Partnerships</div>
+                <h3 class="text-h5 mb-2">Industry & academia</h3>
+                <p class="text-sm opacity-80">
+                    Collaborations that bring real-world context and mentorship.
+                </p>
+            </a>
+        </section>
+
+        <!-- ATL Overview -->
+        <section id="atl" class="mb-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <h2 class="text-h3 mb-4">About the ATL</h2>
+                    <p class="text-base opacity-90 mb-4">
+                        The Atal Tinkering Lab is an innovation-focused
+                        makerspace that empowers students to tinker, prototype
+                        and iterate. Our aim is to nurture design thinking,
+                        computational thinking and interdisciplinary
+                        problem-solving through project-based experiences.
+                    </p>
+
+                    <p class="text-base opacity-90 mb-4">
+                        Students work on mentored projects, participate in
+                        workshops, and use ATL resources to translate ideas into
+                        tangible prototypes — building both technical skills and
+                        an entrepreneurial mindset.
+                    </p>
+
+                    <div class="flex items-center gap-4">
+                        <Button href="#equipment" variant="primary" size="sm"
+                            >Explore Equipment</Button
+                        >
+                        <a href="/contact" class="ml-4 text-sm underline"
+                            >Request an ATL visit</a
+                        >
+                    </div>
+                </div>
+
+                <div>
+                    <img
+                        src="https://images.unsplash.com/photo-1581092795364-8b37b3f9e0d9?w=1200&q=80&auto=format&fit=crop"
+                        alt="Students collaborating in a maker lab"
+                        class="w-full rounded-lg shadow-md object-cover h-64 md:h-80"
+                    />
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature cards -->
+        <section class="mb-12">
+            <div class="mb-6">
+                <div class="text-eyebrow">What we offer</div>
+                <h2 class="text-h3">ATL Highlights</h2>
+                <p class="mt-2 text-sm opacity-90">
+                    Hands-on infrastructure, structured learning and community
+                    opportunities to support student innovation.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {
+                    features.map((f) => (
+                        <article class="p-6 rounded-lg border border-black bg-background/90 flex flex-col">
+                            <div class="flex items-start gap-4 mb-4">
+                                <span class="w-12 h-12 flex items-center justify-center rounded-lg bg-primary text-white">
+                                    <f.icon size={20} />
+                                </span>
+                                <div class="flex-1">
+                                    <h3 class="text-h5">{f.title}</h3>
+                                    <p class="text-sm opacity-80 mt-1">
+                                        {f.description}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="mt-auto">
+                                <Button
+                                    href={f.cta.href}
+                                    variant={f.cta?.variant ?? "primary"}
+                                    size="sm"
+                                >
+                                    {f.cta.text}
+                                </Button>
+                            </div>
+                        </article>
+                    ))
+                }
+            </div>
+        </section>
+
+        <!-- Equipment details -->
+        <section id="equipment" class="mb-12">
+            <div class="mb-4">
+                <div class="text-eyebrow">Equipment</div>
+                <h2 class="text-h4">Tools & Safety</h2>
+                <p class="text-sm opacity-90 mt-2 mb-4">
+                    ATL is equipped with makerspace essentials — 3D printers,
+                    laser cutters (where applicable), soldering stations,
+                    microcontroller kits, CNC routers and CAD stations. All
+                    equipment is operated under teacher supervision and safety
+                    protocols.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">Fabrication</div>
+                    <div class="text-sm opacity-80">
+                        3D printing, laser cutting & manual fabrication tools
+                        for rapid prototyping.
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">Electronics & Controls</div>
+                    <div class="text-sm opacity-80">
+                        Microcontrollers, sensors and breadboarding kits for
+                        circuit-based projects.
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">Design & Software</div>
+                    <div class="text-sm opacity-80">
+                        CAD workstations, simulation tools and versioned project
+                        repositories.
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <Button
+                    href="/academics/resources"
+                    variant="ghostDark"
+                    size="sm">ATL Safety & Usage Guide</Button
+                >
+                <a href="/contact" class="ml-4 text-sm underline"
+                    >Book a workshop</a
+                >
+            </div>
+        </section>
+
+        <!-- Programs & clubs -->
+        <section id="programs" class="mb-12">
+            <div class="mb-4">
+                <div class="text-eyebrow">Programs</div>
+                <h2 class="text-h4">Clubs, Workshops & Mentorship</h2>
+                <p class="text-sm opacity-90 mt-2 mb-4">
+                    We run tiered programs for beginners through advanced
+                    makers. Offerings include introductory electronics, robotics
+                    bootcamps, design sprints, hackathons and project
+                    incubators. Teachers and partner mentors support student
+                    teams and provide structured rubrics for assessment.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">Intro to Making</div>
+                    <div class="text-sm opacity-80">
+                        Safety, basics of tools and guided mini-projects.
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">Advanced Projects</div>
+                    <div class="text-sm opacity-80">
+                        Multi-term, mentor-led projects that may feed into
+                        competitions.
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">Entrepreneurship & Outreach</div>
+                    <div class="text-sm opacity-80">
+                        Support for productization and community-facing
+                        showcases.
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <Button href="/contact" variant="primary" size="sm"
+                    >Join an ATL Program</Button
+                >
+                <a
+                    href="/academics/innovation/ils"
+                    class="ml-4 text-sm underline">Explore Simulation Labs</a
+                >
+            </div>
+        </section>
+
+        <!-- Outcomes & competitions -->
+        <section id="outcomes" class="mb-12">
+            <div class="mb-4">
+                <div class="text-eyebrow">Outcomes</div>
+                <h2 class="text-h4">Student Outcomes & Showcases</h2>
+                <p class="text-sm opacity-90 mt-2 mb-4">
+                    Students complete portfolios of projects, participate in
+                    inter-school events and develop skills in design,
+                    troubleshooting and presentation.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">Project Portfolios</div>
+                    <div class="text-sm opacity-80">
+                        Documented projects that demonstrate growth across
+                        concepts and tools.
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">Competitions</div>
+                    <div class="text-sm opacity-80">
+                        Teams may compete at regional and national maker events
+                        and science fairs.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Safety & training -->
+        <section id="safety" class="mb-12">
+            <div class="mb-4">
+                <div class="text-eyebrow">Safety</div>
+                <h2 class="text-h4">Training & Responsible Use</h2>
+                <p class="text-sm opacity-90 mt-2 mb-4">
+                    Safety is central to ATL operations. All students complete
+                    mandatory safety modules and supervised tool training prior
+                    to independent use. Staff maintain checklists and compliance
+                    records.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">Mandatory Training</div>
+                    <div class="text-sm opacity-80">
+                        Tool-specific induction and safety sign-off for each
+                        student.
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">Supervision & Scheduling</div>
+                    <div class="text-sm opacity-80">
+                        Staffed sessions ensure proper usage and reduce risk
+                        during fabrication.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Partnerships -->
+        <section id="partnerships" class="mb-12">
+            <div class="mb-4">
+                <div class="text-eyebrow">Partnerships</div>
+                <h2 class="text-h4">Industry, Academia & Community</h2>
+                <p class="text-sm opacity-90 mt-2 mb-4">
+                    Our ATL engages with local universities, tech companies and
+                    alumni to bring expertise, sponsorship and real-world
+                    project briefs to students.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">University Partners</div>
+                    <div class="text-sm opacity-80">
+                        Guest lectures, lab visits and research collaborations.
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">Industry Mentors</div>
+                    <div class="text-sm opacity-80">
+                        Project mentoring, evaluation and sandboxed internships.
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">Community Outreach</div>
+                    <div class="text-sm opacity-80">
+                        Public showcases and school-run maker camps.
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <Button href="/contact" variant="primary" size="sm"
+                    >Partner with ATL</Button
+                >
+                <a href="/about" class="ml-4 text-sm underline"
+                    >Learn about partnerships</a
+                >
+            </div>
+        </section>
+
+        <!-- Footer CTA -->
+        <section class="mt-12">
+            <div
+                class="rounded-lg p-6 border bg-background/90 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+            >
+                <div>
+                    <div class="font-medium">
+                        Interested in ATL resources or visits?
+                    </div>
+                    <div class="text-sm opacity-90">
+                        Contact us to schedule a demo, workshop or partner
+                        session.
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <Button href="/contact" variant="primary" size="sm"
+                        >Request a Visit</Button
+                    >
+                    <a href="/academics/innovation" class="text-sm underline"
+                        >Back to Innovation</a
+                    >
+                </div>
+            </div>
+        </section>
+    </main>
+</BaseLayout>

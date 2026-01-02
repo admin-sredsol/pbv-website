@@ -1,0 +1,315 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import SectionHeader from "../../../components/academics/SectionHeader.astro";
+import Button from "../../../components/ui/Button.astro";
+import { Monitor, HardDrive, Wifi, Users } from "lucide-astro";
+import type { Feature } from "../../../types/feature";
+
+/**
+ * /academics/innovation/ils
+ *
+ * Interactive Learning Space — Simulation Labs page
+ *
+ * Design follows existing academics pages:
+ * - SectionHeader for intro
+ * - Feature cards with icon + short descriptions
+ * - CTA buttons and links to related resources
+ */
+
+const headerContent = {
+    eyebrow: "Innovation",
+    title: "Interactive Learning Space — Simulation Labs",
+    description:
+        "Simulation-based learning uses interactive, virtual environments to mimic real-world scenarios. Our platform enables students to perform virtual lab activities that clarify complex concepts through hands-on, guided experience.",
+    button: {
+        text: "Back to Innovation",
+        link: "/academics/innovation",
+        variant: "ghostDark",
+    },
+} as const;
+
+const features = [
+    {
+        icon: Monitor,
+        title: "Mapped Virtual Lab Activities",
+        description:
+            "A curated library of simulation activities mapped to our curriculum. Each activity includes objectives, step-by-step tasks and assessment rubrics so students can practice and demonstrate mastery.",
+        cta: {
+            text: "View Activities",
+            href: "/academics/innovation/ils#mapped",
+            variant: "primary",
+        },
+    },
+    {
+        icon: HardDrive,
+        title: "Secure Offline Access",
+        description:
+            "Downloadable modules allow labs to run offline in a secure, sandboxed environment — ideal for low-connectivity situations and fieldwork.",
+        cta: {
+            text: "Offline Access Guide",
+            href: "/academics/innovation/ils#offline",
+            variant: "ghostDark",
+        },
+    },
+    {
+        icon: Wifi,
+        title: "Campus-wide Connectivity",
+        description:
+            "Seamless integration with our campus network provides fast access to simulators, artifact repositories and central project storage so students can work anywhere on campus.",
+        cta: {
+            text: "Network & Access",
+            href: "/academics/innovation/ils#connectivity",
+            variant: "ghostDark",
+        },
+    },
+    {
+        icon: Users,
+        title: "Collaborative Learning",
+        description:
+            "Multi-user labs support paired and group modes so learners collaborate in real-time, share results, and iterate together on solutions.",
+        cta: {
+            text: "Collaboration Tools",
+            href: "/academics/innovation/ils#collab",
+            variant: "primary",
+        },
+    },
+];
+---
+
+<BaseLayout title="Interactive Learning Space — ILS">
+    <main class="site-container px-4 py-12">
+        <SectionHeader content={headerContent} />
+
+        <!-- Intro -->
+        <section id="ils" class="mt-12 mb-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div>
+                    <h2 class="text-h3 mb-4">Why simulation-based learning?</h2>
+                    <p class="text-base opacity-90 mb-4">
+                        Simulation-based learning lets students experiment in
+                        risk-free virtual environments that mirror real-world
+                        situations. By manipulating variables, testing
+                        hypotheses, and observing outcomes, learners build
+                        transferable intuition and stronger conceptual
+                        understanding.
+                    </p>
+
+                    <p class="text-base opacity-90 mb-4">
+                        We combine mapped activities, secure offline delivery,
+                        campus connectivity, and collaborative tools to make
+                        simulations accessible and pedagogically effective
+                        across grades.
+                    </p>
+
+                    <div class="flex items-center gap-4">
+                        <Button
+                            href="/academics/innovation"
+                            variant="ghostDark"
+                            size="sm">Back to Innovation</Button
+                        >
+                        <a href="/academics/resources" class="text-sm underline"
+                            >ILS Resources</a
+                        >
+                    </div>
+                </div>
+
+                <div>
+                    <img
+                        src="https://images.unsplash.com/photo-1584697964403-9f91d8f0f3b7?w=1200&q=80&auto=format&fit=crop"
+                        alt="Student using a virtual lab simulation on a laptop"
+                        class="w-full rounded-lg shadow-md object-cover h-64 md:h-80"
+                    />
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature cards -->
+        <section class="mb-12">
+            <div class="mb-6">
+                <div class="text-eyebrow">Features</div>
+                <h2 class="text-h3">Core ILS Capabilities</h2>
+                <p class="mt-2 text-sm opacity-90">
+                    The Interactive Learning Space (ILS) emphasizes scalable,
+                    curriculum-aligned simulations and collaborative workflows.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                {
+                    features.map((f) => (
+                        <article class="p-6 rounded-lg border border-black bg-background/90 flex flex-col">
+                            <div class="flex items-center gap-4 mb-4">
+                                <span class="w-12 h-12 flex items-center justify-center rounded-lg bg-primary text-white">
+                                    <f.icon size={20} />
+                                </span>
+                                <div>
+                                    <h3 class="text-h5">{f.title}</h3>
+                                    <p class="text-sm opacity-80 mt-1">
+                                        {f.description}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="mt-auto">
+                                <Button
+                                    href={f.cta.href}
+                                    variant={
+                                        (f.cta?.variant as any) ?? "primary"
+                                    }
+                                    size="sm"
+                                >
+                                    {f.cta.text}
+                                </Button>
+                            </div>
+                        </article>
+                    ))
+                }
+            </div>
+        </section>
+
+        <!-- Mapped activities -->
+        <section id="mapped" class="mb-12">
+            <div class="mb-4">
+                <div class="text-eyebrow">Mapped Activities</div>
+                <h2 class="text-h4">Simulation catalogue</h2>
+                <p class="text-sm opacity-90 mt-2 mb-4">
+                    Activities below are mapped to curriculum outcomes and
+                    include teacher notes, student tasks and assessment rubrics.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">
+                        Physics: Virtual Mechanics Lab
+                    </div>
+                    <div class="text-sm opacity-80">
+                        Explore forces, friction, and motion through
+                        parameterized experiments.
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">
+                        Chemistry: Reaction Kinetics Simulator
+                    </div>
+                    <div class="text-sm opacity-80">
+                        Run virtual titrations and study rates with safe,
+                        repeatable scenarios.
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">
+                        Biology: Cell Structure Explorer
+                    </div>
+                    <div class="text-sm opacity-80">
+                        Interact with 3D models and simulate staining and
+                        microscopy techniques.
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">
+                        Environmental Science: Watershed Modeling
+                    </div>
+                    <div class="text-sm opacity-80">
+                        Model rainfall-runoff and land-use effects on water
+                        quality.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Offline & connectivity -->
+        <section id="offline" class="mb-12">
+            <div class="mb-4">
+                <div class="text-eyebrow">Access & Connectivity</div>
+                <h2 class="text-h4">
+                    Secure Offline Access & Campus Connectivity
+                </h2>
+                <p class="text-sm opacity-90 mt-2 mb-4">
+                    We provide encrypted, signed modules for offline use on
+                    school devices and maintain campus-wide caching and mirrors
+                    so virtual labs are performant and reliable.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">Secure Offline Access</div>
+                    <div class="text-sm opacity-80">
+                        Signed simulation bundles with teacher-controlled sync
+                        schedules.
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">Campus Caching</div>
+                    <div class="text-sm opacity-80">
+                        Local mirrors and CDN caching reduce latency and
+                        bandwidth usage.
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">Device Management</div>
+                    <div class="text-sm opacity-80">
+                        Managed image updates and secure sandbox policies for
+                        student devices.
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <Button
+                    href="/academics/innovation/atl"
+                    variant="primary"
+                    size="sm">See ATL</Button
+                >
+                <a href="/contact" class="ml-4 text-sm underline"
+                    >Request a demo</a
+                >
+            </div>
+        </section>
+
+        <!-- Collaboration -->
+        <section id="collab" class="mb-12">
+            <div class="mb-4">
+                <div class="text-eyebrow">Collaboration</div>
+                <h2 class="text-h4">Collaborative Learning in Simulations</h2>
+                <p class="text-sm opacity-90 mt-2 mb-4">
+                    Group modes, shared workspaces and real-time telemetry let
+                    students work together on experiments, compare approaches
+                    and learn from peers' processes.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">Shared Sessions</div>
+                    <div class="text-sm opacity-80">
+                        Teachers can start synchronous sessions and assign
+                        breakout groups.
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-lg border bg-background/90">
+                    <div class="font-medium">Instructor Dashboard</div>
+                    <div class="text-sm opacity-80">
+                        Live dashboards show attempts, key metrics and teacher
+                        actions for timely feedback.
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <Button
+                    href="/academics/innovation"
+                    variant="ghostDark"
+                    size="sm">Back to Innovation Hub</Button
+                >
+            </div>
+        </section>
+    </main>
+</BaseLayout>

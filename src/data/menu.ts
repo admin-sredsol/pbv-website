@@ -46,7 +46,7 @@ export const headerMenu = [
   },
 
   {
-    name: "Innovation",
+    name: "Innovation Hub",
     link: "/academics/innovation",
     icon: "BrainCircuit",
     showArrow: true,

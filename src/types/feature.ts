@@ -6,7 +6,7 @@ export interface Feature {
   cta?: {
     text: string;
     href: string;
-    variant?: "primary" | "secondary" | "ghostLight" | "ghostDark";
+    variant?: "primary" | "secondary" | "ghostLight" | "ghostDark" | "accent";
     target?: string; // e.g. '_blank'
   };
 }

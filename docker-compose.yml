@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  web:
+    # Build the multi-stage image defined by ./Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pbv-website:latest
+    container_name: pbv-website
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    # Optional: bind mount the nginx config so you can edit it without rebuilding the image.
+    # The Dockerfile already copies the config at build time; uncomment the volume below if you prefer runtime mounts.
+    # volumes:
+    #   - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    # TLS certs (if you obtain certs on the host with certbot, mount them here and ensure nginx/default.conf references their paths)
+    # volumes:
+    #   - /etc/letsencrypt/live/your.domain/fullchain.pem:/etc/ssl/certs/fullchain.pem:ro
+    #   - /etc/letsencrypt/live/your.domain/privkey.pem:/etc/ssl/private/privkey.pem:ro
+
+    environment:
+      # Example environment vars you may find useful; adjust or remove as needed.
+      NODE_ENV: "production"
+      # VIRTUAL_HOST: "your.domain"    # used if you run an automated reverse proxy that respects this env var
+      # LETSENCRYPT_HOST: "your.domain"
+      # LETSENCRYPT_EMAIL: "admin@your.domain"
+
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Example notes:
+# - Build the image and run: `docker compose up -d --build`
+# - To obtain TLS certs on the host using certbot and mount them into the container, make sure ports 80/443 are available during the cert issuance step.
+# - For a production setup with automatic TLS, consider running a reverse proxy (Traefik/Caddy/nginx-proxy) on the host that handles certificates,
+#   and run this container as an HTTP-only service (expose only port 80 internally).
