@@ -1,0 +1,83 @@
+---
+export interface Props {
+    tags: string[];
+    years: number[];
+    selectedTag?: string;
+    selectedYear?: number;
+    showFeaturedOnly?: boolean;
+    search?: string;
+    // Event handlers for parent to handle filter changes (optional for Astro Islands)
+    onTagChange?: (tag: string) => void;
+    onYearChange?: (year: number | "") => void;
+    onFeaturedChange?: (featured: boolean) => void;
+    onSearchChange?: (search: string) => void;
+}
+
+const {
+    tags = [],
+    years = [],
+    selectedTag = "",
+    selectedYear = undefined,
+    showFeaturedOnly = false,
+    search = "",
+    // Event handlers (no-ops by default)
+    onTagChange = () => {},
+    onYearChange = () => {},
+    onFeaturedChange = () => {},
+    onSearchChange = () => {},
+} = Astro.props;
+---
+
+<div class="flex flex-wrap gap-2 items-center mb-8">
+    <!-- Tag Filters -->
+    <button
+        class={`px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-primary hover:text-white transition ${!selectedTag ? "bg-primary text-white" : ""}`}
+        type="button"
+        on:click={() => onTagChange("")}
+    >
+        All
+    </button>
+    {
+        tags.map((tag) => (
+            <button
+                class={`px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-primary hover:text-white transition ${selectedTag === tag ? "bg-primary text-white" : ""}`}
+                type="button"
+                on:click={() => onTagChange(tag)}
+            >
+                {tag}
+            </button>
+        ))
+    }
+    <!-- Featured Toggle -->
+    <button
+        class={`px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-primary hover:text-white transition ${showFeaturedOnly ? "bg-primary text-white" : ""}`}
+        type="button"
+        on:click={() => onFeaturedChange(!showFeaturedOnly)}
+    >
+        Featured
+    </button>
+    <!-- Year Dropdown -->
+    <select
+        class="ml-4 px-2 py-1 rounded border border-gray-300 text-sm"
+        value={selectedYear ?? ""}
+        on:change={(e) =>
+            onYearChange(e.target.value ? Number(e.target.value) : "")}
+    >
+        <option value="">All Years</option>
+        {
+            years.map((year) => (
+                <option value={year} selected={selectedYear === year}>
+                    {year}
+                </option>
+            ))
+        }
+    </select>
+    <!-- Search Bar -->
+    <input
+        type="search"
+        placeholder="Search..."
+        value={search}
+        class="ml-4 px-3 py-1 rounded border border-gray-300 text-sm"
+        on:input={(e) => onSearchChange(e.target.value)}
+    />
+</div>

@@ -1,0 +1,286 @@
+---
+import type { ThemeColor, PaddingSize } from "../../utils/styleUtils";
+import {
+    getBackgroundColor,
+    getTextColor,
+    getPaddingClass,
+} from "../../utils/styleUtils";
+import Button from "../ui/Button.astro";
+import Eyebrow from "../ui/Eyebrow.astro";
+
+export interface CarouselItem {
+    image?: string;
+    alt?: string;
+    title?: string;
+    description?: string;
+    link?: string;
+}
+
+export interface ContentProps {
+    eyebrow?: string;
+    title?: string;
+    description?: string;
+    button?: {
+        text: string;
+        link: string;
+        variant?: "primary" | "secondary" | "ghostLight" | "ghostDark";
+    };
+}
+
+export interface Props {
+    items?: CarouselItem[];
+    content?: ContentProps;
+    background?: ThemeColor;
+    padding?: PaddingSize;
+    paddingTop?: PaddingSize;
+    paddingBottom?: PaddingSize;
+    /**
+     * Optional id for the carousel root
+     */
+    id?: string;
+    /**
+     * Tailwind-like height classes to control the carousel height (responsive).
+     * Example: "h-56 md:h-96"
+     */
+    heightClass?: string;
+}
+
+const {
+    items = [
+        {
+            image: "https://flowbite.com/docs/images/carousel/carousel-1.svg",
+            alt: "Slide 1",
+        },
+        {
+            image: "https://flowbite.com/docs/images/carousel/carousel-2.svg",
+            alt: "Slide 2",
+        },
+        {
+            image: "https://flowbite.com/docs/images/carousel/carousel-3.svg",
+            alt: "Slide 3",
+        },
+    ],
+    content = {},
+    background = "base",
+    id = `carousel-${Math.random().toString(36).slice(2, 9)}`,
+    heightClass = "h-56 md:h-96",
+} = Astro.props as Props;
+
+const { eyebrow, title, description, button } = content;
+
+const bgColor = getBackgroundColor(background);
+const textColor = getTextColor(background);
+const paddingClass = getPaddingClass({
+    padding: Astro.props.padding,
+    paddingTop: Astro.props.paddingTop,
+    paddingBottom: Astro.props.paddingBottom,
+});
+---
+
+<section class:list={["relative", bgColor, paddingClass]}>
+    <div class="site-container px-4">
+        {
+            (title || description || eyebrow) && (
+                <div class="text-center mb-8 max-w-3xl mx-auto">
+                    {eyebrow && (
+                        <Eyebrow text={eyebrow} background={background} />
+                    )}
+                    {title && (
+                        <h2 class:list={[textColor]} data-aos="fade-up">
+                            {title}
+                        </h2>
+                    )}
+                    {description && (
+                        <p
+                            class:list={["mt-4", textColor, "opacity-90"]}
+                            data-aos="fade-up"
+                            data-aos-delay="100"
+                        >
+                            {description}
+                        </p>
+                    )}
+                    {button && (
+                        <div
+                            class="mt-6"
+                            data-aos="fade-up"
+                            data-aos-delay="200"
+                        >
+                            <Button
+                                href={button.link}
+                                variant={button.variant || "primary"}
+                            >
+                                {button.text}
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            )
+        }
+
+        <div
+            id={id}
+            class="relative w-full"
+            role="region"
+            aria-roledescription="carousel"
+            aria-label="Image carousel"
+            data-carousel="slide"
+        >
+            <!-- Carousel wrapper -->
+            <div
+                class:list={[
+                    "relative overflow-hidden rounded-lg",
+                    heightClass,
+                ]}
+            >
+                {
+                    items.length > 0 ? (
+                        items.map((slide, i) => (
+                            <div
+                                class="hidden duration-700 ease-in-out"
+                                data-carousel-item
+                            >
+                                <img
+                                    src={slide.image}
+                                    alt={
+                                        slide.alt ||
+                                        slide.title ||
+                                        `Slide ${i + 1}`
+                                    }
+                                    class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2 object-cover"
+                                    loading={i === 0 ? "eager" : "lazy"}
+                                    decoding="async"
+                                    fetchpriority={i === 0 ? "high" : "auto"}
+                                />
+                                {(slide.title ||
+                                    slide.description ||
+                                    slide.link) && (
+                                    <div class="absolute inset-0 pointer-events-none">
+                                        <div class="absolute bottom-6 left-6 md:bottom-10 md:left-10 pointer-events-auto">
+                                            {slide.title && (
+                                                <h3
+                                                    class:list={[
+                                                        "text-h3 mb-2",
+                                                        textColor,
+                                                    ]}
+                                                >
+                                                    {slide.title}
+                                                </h3>
+                                            )}
+                                            {slide.description && (
+                                                <p
+                                                    class:list={[
+                                                        textColor,
+                                                        "opacity-90",
+                                                    ]}
+                                                >
+                                                    {slide.description}
+                                                </p>
+                                            )}
+                                            {slide.link && (
+                                                <a
+                                                    href={slide.link}
+                                                    class="mt-4 inline-block pointer-events-auto"
+                                                >
+                                                    <span class="inline-flex items-center px-4 py-2 rounded bg-primary text-white">
+                                                        Learn more
+                                                    </span>
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))
+                    ) : (
+                        /* allow consumers to pass custom slides via slot */
+                        <slot />
+                    )
+                }
+            </div>
+
+            <!-- Slider indicators -->
+            {
+                items.length > 1 && (
+                    <div class="absolute z-30 flex -translate-x-1/2 bottom-5 left-1/2 space-x-3 rtl:space-x-reverse">
+                        {items.map((_, idx) => (
+                            <button
+                                type="button"
+                                class="w-3 h-3 rounded-full"
+                                aria-current={idx === 0 ? "true" : "false"}
+                                aria-label={`Slide ${idx + 1}`}
+                                data-carousel-slide-to={idx}
+                            />
+                        ))}
+                    </div>
+                )
+            }
+
+            <!-- Slider controls -->
+            {
+                items.length > 1 && (
+                    <>
+                        <button
+                            type="button"
+                            class="absolute top-0 start-0 z-30 flex items-center justify-center h-full px-4 cursor-pointer group focus:outline-none"
+                            data-carousel-prev
+                            aria-label="Previous"
+                        >
+                            <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/30 dark:bg-gray-800/30 group-hover:bg-white/50 dark:group-hover:bg-gray-800/60">
+                                <svg
+                                    class="w-4 h-4 text-white dark:text-gray-800 rtl:rotate-180"
+                                    aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 6 10"
+                                >
+                                    <path
+                                        stroke="currentColor"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M5 1 1 5l4 4"
+                                    />
+                                </svg>
+                                <span class="sr-only">Previous</span>
+                            </span>
+                        </button>
+                        <button
+                            type="button"
+                            class="absolute top-0 end-0 z-30 flex items-center justify-center h-full px-4 cursor-pointer group focus:outline-none"
+                            data-carousel-next
+                            aria-label="Next"
+                        >
+                            <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/30 dark:bg-gray-800/30 group-hover:bg-white/50 dark:group-hover:bg-gray-800/60">
+                                <svg
+                                    class="w-4 h-4 text-white dark:text-gray-800 rtl:rotate-180"
+                                    aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 6 10"
+                                >
+                                    <path
+                                        stroke="currentColor"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="m1 9 4-4-4-4"
+                                    />
+                                </svg>
+                                <span class="sr-only">Next</span>
+                            </span>
+                        </button>
+                    </>
+                )
+            }
+        </div>
+    </div>
+</section>
+
+<style>
+    /* Minimal cosmetic helpers to ensure the Flowbite carousel visuals remain intact and responsive */
+    /* Keep slide stacking context for smooth opacity transitions handled by Flowbite JS */
+    [data-carousel-item] {
+        position: absolute;
+        inset: 0;
+    }
+</style>

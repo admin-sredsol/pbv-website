@@ -1,0 +1,56 @@
+---
+import type { ThemeColor } from "../../utils/styleUtils";
+import { getBackgroundColor, getTextColor } from "../../utils/styleUtils";
+
+export interface Props {
+    type: "photo" | "video";
+    src: string;
+    alt?: string;
+    poster?: string;
+    title?: string;
+    background?: ThemeColor;
+    rounded?: string;
+    className?: string;
+    aspect?: string; // e.g., "aspect-video" or "aspect-square"
+}
+
+const {
+    type,
+    src,
+    alt = "",
+    poster,
+    title,
+    background = "base",
+    rounded = "rounded-lg",
+    className = "",
+    aspect = "aspect-video",
+} = Astro.props;
+
+const bg = getBackgroundColor(background);
+const text = getTextColor(background);
+---
+
+<div class={`overflow-hidden flex flex-col ${bg} ${rounded} ${className}`}>
+    {
+        type === "photo" ? (
+            <img
+                src={src}
+                alt={alt || title}
+                class={`w-full h-full object-cover ${aspect} ${rounded} transition-transform duration-300 hover:scale-105`}
+                loading="lazy"
+            />
+        ) : (
+            <video
+                src={src}
+                poster={poster}
+                controls
+                class={`w-full h-full ${aspect} ${rounded}`}
+                preload="metadata"
+                title={title}
+            >
+                Your browser does not support the video tag.
+            </video>
+        )
+    }
+    {title && <div class={`p-2 text-center text-sm ${text}`}>{title}</div>}
+</div>

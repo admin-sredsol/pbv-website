@@ -1,0 +1,155 @@
+---
+import type { ThemeColor, PaddingSize } from "../../utils/styleUtils";
+import {
+    getBackgroundColor,
+    getTextColor,
+    getPaddingClass,
+} from "../../utils/styleUtils";
+
+export interface GradeItem {
+    grade: string | number;
+    title?: string;
+    summary?: string;
+    details?: string; // simple HTML or markdown-rendered string; we render as innerHTML
+}
+
+export interface Props {
+    items?: GradeItem[];
+    id?: string;
+    background?: ThemeColor;
+    padding?: PaddingSize;
+    paddingTop?: PaddingSize;
+    paddingBottom?: PaddingSize;
+    /**
+     * Optional class to control accordion container width
+     */
+    containerClass?: string;
+}
+
+const {
+    items = [],
+    id = `grade-accordion-${Math.random().toString(36).slice(2, 9)}`,
+    background = "base",
+    padding,
+    paddingTop,
+    paddingBottom,
+    containerClass = "",
+} = Astro.props as Props;
+
+const bgColor = getBackgroundColor(background);
+const textColor = getTextColor(background);
+const paddingClass = getPaddingClass({ padding, paddingTop, paddingBottom });
+---
+
+<section class:list={["relative", bgColor, paddingClass]}>
+    <div class:list={["site-container px-4", containerClass]}>
+        <div id={id} data-accordion="collapse" class="w-full">
+            {
+                items.map((item, index) => {
+                    const headingId = `${id}-heading-${index}`;
+                    const bodyId = `${id}-body-${index}`;
+                    return (
+                        <div
+                            class="border-b border-black/10"
+                            data-accordion-item
+                        >
+                            <h2 id={headingId}>
+                                <button
+                                    type="button"
+                                    class="flex items-center justify-between w-full p-4 text-left"
+                                    data-accordion-target={`#${bodyId}`}
+                                    aria-expanded={
+                                        index === 0 ? "true" : "false"
+                                    }
+                                    aria-controls={bodyId}
+                                >
+                                    <div class="flex items-start gap-4">
+                                        <div class="text-sm font-medium opacity-90">
+                                            {typeof item.grade === "number"
+                                                ? `Grade ${item.grade}`
+                                                : item.grade}
+                                        </div>
+                                        {item.title && (
+                                            <div
+                                                class:list={[
+                                                    "text-sm",
+                                                    textColor,
+                                                    "font-semibold",
+                                                ]}
+                                            >
+                                                {item.title}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <svg
+                                        data-accordion-icon
+                                        class="w-6 h-6 shrink-0"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M19 9l-7 7-7-7"
+                                        />
+                                    </svg>
+                                </button>
+                            </h2>
+
+                            <div
+                                id={bodyId}
+                                class={index === 0 ? "p-4" : "hidden"}
+                                aria-labelledby={headingId}
+                                data-accordion-body
+                            >
+                                <div class="p-2 text-sm">
+                                    {item.summary && (
+                                        <p
+                                            class:list={[
+                                                textColor,
+                                                "mb-3",
+                                                "opacity-90",
+                                            ]}
+                                        >
+                                            {item.summary}
+                                        </p>
+                                    )}
+                                    {item.details ? (
+                                        <div
+                                            set:html={item.details}
+                                            class:list={[
+                                                textColor,
+                                                "prose max-w-none",
+                                            ]}
+                                        />
+                                    ) : (
+                                        <p class="opacity-70 text-sm">
+                                            No further details available.
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })
+            }
+        </div>
+    </div>
+</section>
+
+<style>
+    /* Keep accordion chevron transition smooth when Flowbite toggles rotation via data attributes */
+    [data-accordion-icon] {
+        transition: transform 0.2s ease;
+    }
+
+    /* Flowbite will toggle classes; ensure the 'hidden' utility hides the content */
+    [data-accordion-body].hidden {
+        display: none;
+    }
+</style>

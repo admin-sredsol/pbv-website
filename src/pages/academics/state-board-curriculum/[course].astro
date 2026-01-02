@@ -1,0 +1,268 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import SectionHeader from "../../../components/academics/SectionHeader.astro";
+import CurriculumGrid from "../../../components/academics/CurriculumGrid.astro";
+import ResourceItem from "../../../components/academics/ResourceItem.astro";
+import { academicsSample } from "../../../data/academics/sample";
+
+/**
+ * Provide static paths for the dynamic State Board course route.
+ * We use the course `id` from the sample data as the dynamic param.
+ */
+export async function getStaticPaths() {
+    const { courses = [] } = academicsSample;
+
+    const stateCourses = courses.filter((c) => {
+        if (!c) return false;
+        const t = String(c.type || "").toLowerCase();
+        const id = String(c.id || "").toLowerCase();
+        return t === "state" || id.startsWith("state-") || id.includes("-sb");
+    });
+
+    const courseIds = Array.from(
+        new Set(stateCourses.map((c) => String(c.id).trim())),
+    )
+        .filter(Boolean)
+        .sort();
+
+    // Provide at least one fallback path so local builds don't fail when sample data is empty
+    if (courseIds.length === 0) {
+        return [{ params: { course: "state-general" } }];
+    }
+
+    return courseIds.map((course) => ({ params: { course } }));
+}
+
+const { course } = Astro.params || {};
+const { courses = [], resources = [] } = academicsSample;
+
+/**
+ * Find the course by id (exact match). If not found, page will show a friendly not-found state.
+ */
+const courseItem = courses.find((c) => String(c.id) === String(course));
+
+const pageTitle = courseItem
+    ? `${courseItem.title} — State Board Curriculum`
+    : "Course not found";
+const pageDescription = courseItem
+    ? courseItem.summary || ""
+    : "Requested state-board course could not be found.";
+
+/**
+ * Compute related resources for the current course (server-side).
+ * Note: We deliberately do NOT normalize `fileUrl` here — `ResourceItem` accepts an optional `fileUrl`.
+ */
+const relatedResources = courseItem
+    ? resources.filter((r) => {
+          if (!r) return false;
+
+          const keyGrade = courseItem.grade ? String(courseItem.grade) : null;
+          // heuristic fallback: use parts of id after initial prefix
+          const keySubj = String(courseItem.id || "")
+              .split("-")
+              .slice(1)
+              .join("-")
+              .toLowerCase();
+
+          // match by explicit resource grade
+          if (
+              keyGrade &&
+              String(r.grade) !== "" &&
+              String(r.grade) === keyGrade
+          )
+              return true;
+
+          // match by resource.subject or title heuristics
+          const subj = (r.subject || "").toLowerCase();
+          if (subj && keySubj && subj.includes(keySubj)) return true;
+
+          const title = (r.title || "").toLowerCase();
+          if (keySubj && title.includes(keySubj)) return true;
+
+          return false;
+      })
+    : [];
+---
+
+<BaseLayout>
+    <main class="site-container px-4 py-12">
+        <SectionHeader
+            content={{
+                eyebrow: "State Board Curriculum",
+                title: courseItem ? courseItem.title : "Course not found",
+                description: pageDescription,
+            }}
+        />
+
+        {
+            courseItem ? (
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+                    <section class="lg:col-span-2 space-y-6">
+                        <div class="p-6 rounded-lg border border-black bg-background/90">
+                            <div class="mb-4">
+                                <h3 class="text-h5">Course details</h3>
+                            </div>
+
+                            <div class="space-y-3">
+                                {courseItem.grade && (
+                                    <div>
+                                        <strong>Grade:</strong>{" "}
+                                        {courseItem.grade}
+                                    </div>
+                                )}
+                                {courseItem.teacher && (
+                                    <div>
+                                        <strong>Teacher:</strong>{" "}
+                                        {courseItem.teacher}
+                                    </div>
+                                )}
+                                {courseItem.code && (
+                                    <div>
+                                        <strong>Course code:</strong>{" "}
+                                        {courseItem.code}
+                                    </div>
+                                )}
+                                {courseItem.summary && (
+                                    <p class="opacity-90">
+                                        {courseItem.summary}
+                                    </p>
+                                )}
+                                {courseItem.syllabusUrl ? (
+                                    <div class="mt-4">
+                                        <a
+                                            class="inline-flex items-center px-3 py-2 rounded bg-primary text-white"
+                                            href={courseItem.syllabusUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Download syllabus
+                                        </a>
+                                    </div>
+                                ) : (
+                                    <div class="mt-4 text-sm opacity-80">
+                                        No syllabus file linked for this course.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div class="p-6 rounded-lg border border-black bg-background/90">
+                            <h4 class="text-h5 mb-3">Related resources</h4>
+
+                            {relatedResources && relatedResources.length ? (
+                                <div class="space-y-3">
+                                    {relatedResources.map((r) => (
+                                        <ResourceItem resource={r} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <p class="opacity-80">
+                                    No downloadable resources linked to this
+                                    course. Check the{" "}
+                                    <a
+                                        class="underline"
+                                        href="/academics/resources"
+                                    >
+                                        Resources
+                                    </a>{" "}
+                                    page for more files.
+                                </p>
+                            )}
+                        </div>
+                    </section>
+
+                    <aside class="lg:col-span-1 space-y-6">
+                        <div class="p-4 rounded-lg border border-black bg-background/90">
+                            <h5 class="text-h6 mb-2">
+                                Other State Board courses
+                            </h5>
+                            {(() => {
+                                const otherState = courses.filter((c) => {
+                                    if (!c) return false;
+                                    const t = String(
+                                        c.type || "",
+                                    ).toLowerCase();
+                                    const id = String(c.id || "").toLowerCase();
+                                    return (
+                                        (t === "state" ||
+                                            id.startsWith("state-") ||
+                                            id.includes("-sb")) &&
+                                        String(c.id) !== String(courseItem.id)
+                                    );
+                                });
+                                if (!otherState.length) {
+                                    return (
+                                        <p class="opacity-80 text-sm">
+                                            No other state-board courses found
+                                            in sample data.
+                                        </p>
+                                    );
+                                }
+                                return <CurriculumGrid courses={otherState} />;
+                            })()}
+                        </div>
+
+                        <div class="p-4 rounded-lg border border-black bg-background/90">
+                            <h5 class="text-h6 mb-2">Quick links</h5>
+                            <ul class="list-inside list-disc text-sm opacity-90">
+                                <li>
+                                    <a class="underline" href="/academics">
+                                        Academics hub
+                                    </a>
+                                </li>
+                                <li>
+                                    <a
+                                        class="underline"
+                                        href="/academics/subjects"
+                                    >
+                                        Subjects
+                                    </a>
+                                </li>
+                                <li>
+                                    <a
+                                        class="underline"
+                                        href="/academics/resources"
+                                    >
+                                        Resources
+                                    </a>
+                                </li>
+                                <li>
+                                    <a
+                                        class="underline"
+                                        href="/academics/academic-calendar"
+                                    >
+                                        Academic calendar
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </aside>
+                </div>
+            ) : (
+                <div class="site-container px-4 py-12">
+                    <div class="max-w-3xl mx-auto text-center">
+                        <h2 class="text-h3 mb-4">Course not found</h2>
+                        <p class="opacity-90 mb-6">
+                            We couldn't find a State Board course matching the
+                            URL <code>{course}</code>.
+                        </p>
+                        <div class="flex items-center justify-center gap-3">
+                            <a
+                                class="inline-flex items-center px-4 py-2 rounded bg-primary text-white"
+                                href="/academics/state-board-curriculum"
+                            >
+                                Browse state-board curriculum
+                            </a>
+                            <a
+                                class="inline-flex items-center px-4 py-2 rounded border border-black bg-background/90"
+                                href="/academics"
+                            >
+                                Academics hub
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            )
+        }
+    </main>
+</BaseLayout>

@@ -1,0 +1,52 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Details from "../components/ui/Details.astro";
+---
+
+<BaseLayout
+    title="Details Component Demo"
+    description="Demo page showcasing the Details.astro collapsible component in FAQ style."
+>
+    <main class="max-w-2xl mx-auto py-16 px-4">
+        <h1 class="text-4xl font-bold mb-8 text-center">
+            Details Component Demo
+        </h1>
+        <p class="mb-10 text-center text-gray-600">
+            Below are some frequently asked questions using the <code
+                >Details.astro</code
+            > collapsible panel component.
+        </p>
+        <section class="space-y-6">
+            <Details open={true}>
+                <span slot="heading">What is PBV?</span>
+                <p>
+                    PBV stands for "Project Based Ventures." We focus on
+                    hands-on learning and innovation, nurturing young minds and
+                    fostering a love for learning.
+                </p>
+            </Details>
+            <Details>
+                <span slot="heading">How does the Details component work?</span>
+                <p>
+                    The Details component provides an accessible, animated
+                    collapsible panel. Click the heading to expand or collapse
+                    the content. Plus and minus icons indicate the state.
+                </p>
+            </Details>
+            <Details>
+                <span slot="heading">Can I use multiple panels on a page?</span>
+                <p>
+                    Yes! You can use as many <code>&lt;Details&gt;</code> components
+                    as you like, each with its own heading and content.
+                </p>
+            </Details>
+            <Details>
+                <span slot="heading">Is it accessible?</span>
+                <p>
+                    Yes, the component uses ARIA attributes and keyboard
+                    navigation for accessibility.
+                </p>
+            </Details>
+        </section>
+    </main>
+</BaseLayout>

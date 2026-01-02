@@ -1,0 +1,176 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import HeroVideo from "../components/sections/HeroVideo.astro";
+import heroImage from "../assets/images/home/default-hero-2.jpg";
+import Features from "../components/sections/Features.astro";
+import FeaturesNew from "../components/sections/FeaturesNew.astro";
+import { features } from "../data/feature";
+import Testimonials from "../components/sections/Testimonials.astro";
+import Carousel from "../components/sections/Carousel.astro";
+
+// Example video URL; replace with your own video file or hosted video as needed
+/** @type {any} */
+const heroContent = /** @type {any} */ ({
+    title: "At Prathibha Vidyalayam",
+    description:
+        "we don’t just teach—we shape dreams, celebrate talents, and build futures.",
+    buttons: [
+        {
+            text: "Get Started",
+            link: "/contact",
+            target: "_self",
+        },
+        {
+            text: "Watch on YouTube",
+            link: "https://www.youtube.com/",
+            target: "_blank",
+        },
+    ],
+    backgroundVideo:
+        "https://assets-cdn.prathibhavidyalayam.edu.in/videos/pbv-home-video.mp4", // Place your video in public/videos or update the path
+    backgroundImage: heroImage,
+    overlayOpacity: 0.4,
+    // youtubeUrl: "https://www.youtube.com/embed/X7U5PZackFQ?autoplay=1&start=12",
+    videos: [
+        {
+            type: "youtube",
+            url: "https://www.youtube.com/watch?v=X7U5PZackFQ",
+            title: "YouTube Campus Tour",
+        },
+        {
+            type: "file",
+            url: "/videos/suggested-video-2.mp4",
+            title: "Vimeo Example",
+        },
+        {
+            type: "file",
+            url: "/videos/suggested-video-1.mp4",
+            title: "Direct File Example",
+        },
+    ],
+});
+
+const basicSlides = [
+    {
+        image: "https://images.unsplash.com/photo-1506765515384-028b60a970df?w=1600&q=80&auto=format&fit=crop",
+        alt: "Mountains at sunrise",
+        heading: "Explore the mountains",
+        subheading: "Adventure is out there",
+        cta: { text: "Get started", link: "/get-started" },
+    },
+    {
+        image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1600&q=80&auto=format&fit=crop",
+        alt: "Forest path",
+        heading: "Into the woods",
+        subheading: "Find your path",
+        cta: { text: "See tours", link: "/tours" },
+    },
+    {
+        image: "https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=1600&q=80&auto=format&fit=crop",
+        alt: "Coastline",
+        heading: "Coastal drives",
+        subheading: "Drive the coastlines",
+        cta: { text: "View trips", link: "/trips" },
+    },
+];
+
+const testimonials = [
+    {
+        name: "Mrs. S. Rao",
+        role: "Developer at Open AI",
+        image: "https://flowbite.s3.amazonaws.com/blocks/marketing-ui/avatars/karen-nelson.png",
+        title: "Speechless with how easy this was to integrate",
+        quotes: [
+            `"We are so grateful for the nurturing environment and excellent teaching staff at Prathibha Vidyalayam. Our child has grown academically and personally!"`,
+        ],
+    },
+    {
+        name: "Mr. K. Reddy",
+        role: "Developer at Open AI",
+        image: "https://flowbite.s3.amazonaws.com/blocks/marketing-ui/avatars/karen-nelson.png",
+        title: "Speechless with how easy this was to integrate",
+        quotes: [
+            `"The focus on holistic development and values is what sets this school apart. Thank you for shaping our children’s future!"`,
+        ],
+    },
+    // ...other testimonials
+];
+---
+
+<BaseLayout title="Home">
+    <HeroVideo content={heroContent as any} />
+    <Features
+        content={{
+            eyebrow: "Why Choose Us?",
+            title: "Our Vision and Mission",
+            description:
+                "To provide a balanced blend of academics, sports, arts, innovation, and values — ensuring every child grows into a confident, skilled, and compassionate individual.",
+            button: {
+                text: "Learn More",
+                link: "/about",
+            },
+            features: features.map((f) => {
+                const overrides: Record<
+                    string,
+                    {
+                        text: string;
+                        href: string;
+                        variant?:
+                            | "primary"
+                            | "secondary"
+                            | "ghostLight"
+                            | "ghostDark";
+                    }
+                > = {
+                    "Strong Academics": {
+                        text: "Start Learning",
+                        href: "/academics",
+                        variant: "primary",
+                    },
+                    "Sports Excellence": {
+                        text: "See Sports",
+                        href: "/sports",
+                        variant: "primary",
+                    },
+                };
+                return { ...f, cta: overrides[f.title] ?? f.cta };
+            }),
+        }}
+        background="base"
+        padding="large"
+    />
+    <Carousel
+        items={basicSlides}
+        content={{
+            eyebrow: "Featured",
+            title: "Featured Gallery",
+            description: "Glimpses of Our Success Story.",
+            button: {
+                text: "View all",
+                link: "/gallery",
+                variant: "primary",
+            },
+        }}
+    />
+    <!-- <FeaturesNew
+        features={features}
+        eyebrow="Why Choose Us?"
+        heading="Our Vision and Mission"
+        description="To provide a balanced blend of academics, sports, arts, innovation, and values — ensuring every child grows into a confident, skilled, and compassionate individual."
+        cardBackground="base"
+        cardText="base"
+        cardHeadline="base"
+        background="base"
+    /> -->
+
+    <Testimonials
+        testimonials={testimonials}
+        heading="Testimonials"
+        description="What our users say"
+        background="light"
+        cardBackground="base"
+        cardText="base"
+        cardHeadline="base"
+        eyebrow={{ text: "What people say", background: "base" }}
+    />
+</BaseLayout>

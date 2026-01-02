@@ -1,0 +1,361 @@
+---
+import { listR2Files } from "../utils/r2";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import InnerHero from "../components/sections/InnerHero.astro";
+import heroBg from "../assets/InnerHero-bg.jpg";
+
+const bucket = "website-gallery";
+const prefix = "mandatoryDocs/";
+
+let pdfs = [];
+let r2Error = null;
+try {
+    pdfs = await listR2Files(bucket, prefix);
+} catch (err) {
+    // Capture a friendly error message to show in the UI and log the details server-side.
+    r2Error = err && err.message ? err.message : String(err);
+    // Keep a server-side log so you can inspect errors in logs/console.
+    console.error("Failed to list R2 files for publicdocs:", err);
+}
+
+import Breadcrumbs from "../components/ui/Breadcrumbs.astro";
+import { getBreadcrumbs } from "../utils/getBreadcrumbs";
+import pdfTitles from "../data/pdf-titles.json";
+const breadcrumbs = getBreadcrumbs(Astro.url.pathname);
+
+// Simple humanizer for file names (fallback)
+// - keeps words separated by underscores/dashes
+// - collapses extra whitespace and sentence-cases the result
+const simpleHumanize = (fileName) => {
+    if (!fileName) return "";
+    const name = fileName.replace(/\.[^/.]+$/, "");
+    const spaced = name.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+    const lower = spaced.toLowerCase();
+    return lower.length ? lower.charAt(0).toUpperCase() + lower.slice(1) : "";
+};
+
+// Helper to format bytes (if your listR2Files returns size)
+const formatBytes = (bytes) => {
+    if (bytes == null) return "";
+    const thresh = 1024;
+    if (Math.abs(bytes) < thresh) return bytes + " B";
+    const units = ["KB", "MB", "GB", "TB"];
+    let u = -1;
+    do {
+        bytes /= thresh;
+        ++u;
+    } while (Math.abs(bytes) >= thresh && u < units.length - 1);
+    return bytes.toFixed(1) + " " + units[u];
+};
+---
+
+<BaseLayout title="Docs">
+    <InnerHero
+        content={{
+            title: "Mandatory Public Documents",
+            description:
+                "Browse our documents and download or view them inline.",
+            backgroundImage: heroBg,
+            overlayOpacity: 0.6,
+        }}
+    />
+
+    <section class="max-w-3xl mx-auto mb-8 px-4">
+        <Breadcrumbs crumbs={breadcrumbs} />
+        <h2 class="text-2xl font-bold mb-4 mt-8">
+            Appendix A. General Information
+        </h2>
+
+        <table
+            class="min-w-full max-w-xl bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
+        >
+            <tbody>
+                <tr>
+                    <th
+                        class="text-left px-4 py-2 bg-gray-50 font-medium border-b border-gray-200"
+                        >School Name</th
+                    >
+                    <td class="px-4 py-2 border-b border-gray-200"
+                        >Prathibha Vidyalayam</td
+                    >
+                </tr>
+                <tr>
+                    <th
+                        class="text-left px-4 py-2 bg-gray-50 font-medium border-b border-gray-200"
+                        >UDISE / Code</th
+                    >
+                    <td class="px-4 py-2 border-b border-gray-200"
+                        >28132301310</td
+                    >
+                </tr>
+                <tr>
+                    <th
+                        class="text-left px-4 py-2 bg-gray-50 font-medium border-b border-gray-200"
+                        >Affiliation No.</th
+                    >
+                    <td class="px-4 py-2 border-b border-gray-200"
+                        >Rc.1938/B1/2017</td
+                    >
+                </tr>
+                <tr>
+                    <th
+                        class="text-left px-4 py-2 bg-gray-50 font-medium border-b border-gray-200"
+                        >Address</th
+                    >
+                    <td class="px-4 py-2 border-b border-gray-200"
+                        >Sabbavaram, Visakhapatnam</td
+                    >
+                </tr>
+                <tr>
+                    <th
+                        class="text-left px-4 py-2 bg-gray-50 font-medium border-b border-gray-200"
+                        >Principal</th
+                    >
+                    <td class="px-4 py-2 border-b border-gray-200"
+                        >Ancy Joseph</td
+                    >
+                </tr>
+                <tr>
+                    <th
+                        class="text-left px-4 py-2 bg-gray-50 font-medium border-b border-gray-200"
+                        >Email</th
+                    >
+                    <td class="px-4 py-2 border-b border-gray-200">
+                        <a
+                            href="mailto:info@prathibhavidyalayam.edu.in"
+                            class="text-blue-600 hover:underline"
+                            >info@prathibhavidyalayam.edu.in</a
+                        >
+                    </td>
+                </tr>
+                <tr>
+                    <th class="text-left px-4 py-2 bg-gray-50 font-medium"
+                        >Phone</th
+                    >
+                    <td class="px-4 py-2">08924-248289 / 9866637970</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="max-w-3xl mx-auto px-4 py-8">
+        <h2 class="text-2xl font-bold mb-4 mt-12">Public Documents</h2>
+
+        {
+            r2Error ? (
+                <div class="mb-4 p-4 border border-yellow-200 bg-yellow-50 rounded text-sm text-gray-800">
+                    <strong>Documents (offline)</strong>
+                    <div class="mt-2 text-sm text-gray-700">
+                        We couldn't load the documents from the storage service.
+                        Download links are unavailable right now, but here are
+                        the cached document titles we know about:
+                    </div>
+
+                    <ul class="mt-3 list-disc pl-5 text-gray-800">
+                        {
+                            // Use a unique set of titles from the mapping to avoid duplicates
+                            Array.from(new Set(Object.values(pdfTitles)))
+                                .length === 0 ? (
+                                <li class="text-gray-500">
+                                    No cached document titles available.
+                                </li>
+                            ) : (
+                                Array.from(
+                                    new Set(Object.values(pdfTitles)),
+                                ).map((t, i) => (
+                                    <li key={i} class="truncate">
+                                        {t}
+                                    </li>
+                                ))
+                            )
+                        }
+                    </ul>
+
+                    <div class="mt-3 text-xs text-gray-600">
+                        Try again later or check your network connection.
+                    </div>
+                </div>
+            ) : pdfs.length === 0 ? (
+                <p class="text-gray-500">No documents found.</p>
+            ) : (
+                <div
+                    id="pdfAccordion"
+                    class="border border-gray-200 rounded-lg bg-white shadow-sm divide-y divide-gray-200"
+                >
+                    {pdfs.map((pdf, idx) => {
+                        const fileName = pdf.key.split("/").pop();
+                        const mapped =
+                            pdfTitles[pdf.key] || pdfTitles[fileName];
+                        const pretty = mapped || simpleHumanize(fileName);
+                        const ext = (
+                            fileName.split(".").pop() || ""
+                        ).toUpperCase();
+                        const sizeText = pdf.size ? formatBytes(pdf.size) : "";
+
+                        return (
+                            <div class="border-b border-gray-200" key={idx}>
+                                <h3 class="flex items-center justify-between py-3 px-4 bg-gray-50">
+                                    <button
+                                        id={`pdf-heading-${idx}`}
+                                        type="button"
+                                        class="flex items-center gap-3 flex-1 text-left font-medium text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-400 rounded-sm"
+                                        data-accordion-target={`#pdf-panel-${idx}`}
+                                        aria-expanded="false"
+                                        aria-controls={`pdf-panel-${idx}`}
+                                        title={fileName}
+                                    >
+                                        <span class="flex-1 min-w-0">
+                                            <span class="block normal-case truncate text-sm">
+                                                {pretty}
+                                            </span>
+                                            <span class="block text-xs text-gray-500 mt-0.5">
+                                                {ext}
+                                                {sizeText
+                                                    ? ` • ${sizeText}`
+                                                    : ""}
+                                            </span>
+                                        </span>
+
+                                        {/* Chevron */}
+                                        <svg
+                                            class="h-4 w-4 text-gray-500 transform transition-transform duration-200"
+                                            aria-hidden="true"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M19 9l-7 7-7-7"
+                                            />
+                                        </svg>
+                                    </button>
+
+                                    <a
+                                        href={pdf.url}
+                                        download
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="ml-4 text-green-600 hover:underline text-xs flex-shrink-0"
+                                    >
+                                        Download
+                                    </a>
+                                </h3>
+
+                                <div
+                                    id={`pdf-panel-${idx}`}
+                                    class="hidden"
+                                    role="region"
+                                    aria-labelledby={`pdf-heading-${idx}`}
+                                    aria-hidden="true"
+                                >
+                                    <div class="p-4 bg-white">
+                                        <div class="w-full min-h-[300px] rounded border overflow-hidden">
+                                            <iframe
+                                                data-src={pdf.url}
+                                                loading="lazy"
+                                                class="w-full h-[500px]"
+                                                title={pretty}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )
+        }
+    </section>
+</BaseLayout>
+
+<script type="module">
+    // Single-open accessible accordion + iframe lazy-loading + chevron rotate + keyboard navigation
+    (function () {
+        const accordion = document.getElementById("pdfAccordion");
+        if (!accordion) return;
+
+        const buttons = Array.from(
+            accordion.querySelectorAll("button[data-accordion-target]"),
+        );
+
+        const closePanel = (button) => {
+            const pid = button.getAttribute("aria-controls");
+            const p = document.getElementById(pid);
+            if (p) {
+                p.classList.add("hidden");
+                p.setAttribute("aria-hidden", "true");
+            }
+            button.setAttribute("aria-expanded", "false");
+            const svg = button.querySelector("svg");
+            if (svg) {
+                svg.classList.remove("rotate-180");
+                svg.style.transform = "";
+            }
+        };
+
+        const openPanel = (button) => {
+            const pid = button.getAttribute("aria-controls");
+            const p = document.getElementById(pid);
+            if (!p) return;
+
+            // Close any other open panels (single-open behavior)
+            buttons.forEach((b) => {
+                if (b !== button) closePanel(b);
+            });
+
+            p.classList.remove("hidden");
+            p.setAttribute("aria-hidden", "false");
+            button.setAttribute("aria-expanded", "true");
+
+            // Lazy-load iframe when opening
+            const iframe = p.querySelector("iframe[data-src]");
+            if (iframe && !iframe.src) {
+                iframe.src = iframe.dataset.src;
+            }
+
+            const svg = button.querySelector("svg");
+            if (svg) {
+                svg.classList.add("rotate-180");
+                // fallback inline transform if CSS class isn't available
+                svg.style.transform = "rotate(180deg)";
+            }
+        };
+
+        buttons.forEach((button, index) => {
+            button.addEventListener("click", () => {
+                const isExpanded =
+                    button.getAttribute("aria-expanded") === "true";
+                if (isExpanded) {
+                    closePanel(button);
+                } else {
+                    openPanel(button);
+                }
+            });
+
+            // keyboard navigation: Home/End/ArrowUp/ArrowDown
+            button.addEventListener("keydown", (ev) => {
+                const key = ev.key;
+                if (key === "Home") {
+                    ev.preventDefault();
+                    buttons[0]?.focus();
+                } else if (key === "End") {
+                    ev.preventDefault();
+                    buttons[buttons.length - 1]?.focus();
+                } else if (key === "ArrowDown") {
+                    ev.preventDefault();
+                    buttons[(index + 1) % buttons.length]?.focus();
+                } else if (key === "ArrowUp") {
+                    ev.preventDefault();
+                    buttons[
+                        (index - 1 + buttons.length) % buttons.length
+                    ]?.focus();
+                }
+                // Enter/Space activate the button by default
+            });
+        });
+    })();
+</script>

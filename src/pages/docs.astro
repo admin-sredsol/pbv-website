@@ -1,0 +1,158 @@
+---
+import { listR2Files } from "../utils/r2";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import InnerHero from "../components/sections/InnerHero.astro";
+import heroBg from "../assets/InnerHero-bg.jpg"; // Adjust path as needed
+
+const bucket = "website-gallery"; // TODO: Replace with your actual R2 bucket name
+const prefix = "mandatoryDocs/";
+
+const pdfs = await listR2Files(bucket, prefix);
+import Breadcrumbs from "../components/ui/Breadcrumbs.astro";
+import { getBreadcrumbs } from "../utils/getBreadcrumbs";
+const breadcrumbs = getBreadcrumbs(Astro.url.pathname);
+---
+
+<BaseLayout>
+    <InnerHero
+        content={{
+            title: "Mandatory Public Documents",
+            description: "Browse our albums and relive your favorite moments.",
+            backgroundImage: heroBg,
+            overlayOpacity: 0.6,
+        }}
+    />
+    <section class="max-w-3xl mx-auto mb-8 px-4">
+        <Breadcrumbs crumbs={breadcrumbs} />
+        <h2 class="text-2xl font-bold mb-4 mt-8">
+            Appendix A. General Information
+        </h2>
+        <table
+            class="min-w-full max-w-xl bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden"
+        >
+            <tbody>
+                <tr>
+                    <th
+                        class="text-left px-4 py-2 bg-gray-50 font-medium border-b border-gray-200"
+                        >School Name</th
+                    >
+                    <td class="px-4 py-2 border-b border-gray-200"
+                        >Prathibha Vidyalayam</td
+                    >
+                </tr>
+                <tr>
+                    <th
+                        class="text-left px-4 py-2 bg-gray-50 font-medium border-b border-gray-200"
+                        >UDISE / Code</th
+                    >
+                    <td class="px-4 py-2 border-b border-gray-200"
+                        >28132301310</td
+                    >
+                </tr>
+                <tr>
+                    <th
+                        class="text-left px-4 py-2 bg-gray-50 font-medium border-b border-gray-200"
+                        >Affiliation No.</th
+                    >
+                    <td class="px-4 py-2 border-b border-gray-200"
+                        >Rc.1938/B1/2017</td
+                    >
+                </tr>
+                <tr>
+                    <th
+                        class="text-left px-4 py-2 bg-gray-50 font-medium border-b border-gray-200"
+                        >Address</th
+                    >
+                    <td class="px-4 py-2 border-b border-gray-200"
+                        >Sabbavaram, Visakhapatnam</td
+                    >
+                </tr>
+                <tr>
+                    <th
+                        class="text-left px-4 py-2 bg-gray-50 font-medium border-b border-gray-200"
+                        >Principal</th
+                    >
+                    <td class="px-4 py-2 border-b border-gray-200"
+                        >Ancy Joseph</td
+                    >
+                </tr>
+                <tr>
+                    <th
+                        class="text-left px-4 py-2 bg-gray-50 font-medium border-b border-gray-200"
+                        >Email</th
+                    >
+                    <td class="px-4 py-2 border-b border-gray-200">
+                        <a
+                            href="mailto:info@prathibhavidyalayam.edu.in"
+                            class="text-blue-600 hover:underline"
+                        >
+                            info@prathibhavidyalayam.edu.in
+                        </a>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="text-left px-4 py-2 bg-gray-50 font-medium"
+                        >Phone</th
+                    >
+                    <td class="px-4 py-2">08924-248289 / 9866637970</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="max-w-3xl mx-auto px-4 py-8">
+        <h2 class="text-2xl font-bold mb-4 mt-12">Public Documents</h2>
+        {
+            pdfs.length === 0 ? (
+                <p class="text-gray-500">No documents found.</p>
+            ) : (
+                <div
+                    id="pdfAccordion"
+                    data-accordion="collapse"
+                    class="border border-gray-200 rounded-lg bg-white shadow-sm divide-y divide-gray-200"
+                >
+                    {pdfs.map((pdf, idx) => {
+                        const fileName = pdf.key.split("/").pop();
+                        return (
+                            <div class="border-b border-gray-200">
+                                <h2>
+                                    <button
+                                        type="button"
+                                        class="flex items-center justify-between w-full py-4 px-4 font-medium text-left text-gray-800 bg-gray-50 hover:bg-gray-100 focus:outline-none"
+                                        data-accordion-target={`#pdf-panel-${idx}`}
+                                        aria-expanded="false"
+                                        aria-controls={`pdf-panel-${idx}`}
+                                    >
+                                        <span>{fileName}</span>
+                                        <span>
+                                            <a
+                                                href={pdf.url}
+                                                download
+                                                class="text-green-600 hover:underline text-xs"
+                                            >
+                                                Download
+                                            </a>
+                                        </span>
+                                    </button>
+                                </h2>
+                                <div
+                                    id={`pdf-panel-${idx}`}
+                                    class="hidden"
+                                    aria-labelledby={`pdf-heading-${idx}`}
+                                >
+                                    <div class="p-4 bg-white">
+                                        <iframe
+                                            src={pdf.url}
+                                            class="w-full min-h-[400px] h-auto aspect-[3/4] rounded border"
+                                            style="height:100%;"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )
+        }
+    </section>
+</BaseLayout>

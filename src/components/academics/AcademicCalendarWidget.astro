@@ -1,0 +1,339 @@
+---
+import type { ThemeColor, PaddingSize } from "../../utils/styleUtils";
+import {
+    getBackgroundColor,
+    getTextColor,
+    getPaddingClass,
+} from "../../utils/styleUtils";
+
+export interface CalendarEvent {
+    id?: string;
+    title: string;
+    description?: string;
+    location?: string;
+    start: string; // ISO date-time or date string
+    end?: string; // ISO date-time or date string
+}
+
+/**
+ * Props:
+ * - events: CalendarEvent[] (optional). If not provided, a small sample list will render.
+ * - calendarName: string (display name & ICS NAME)
+ * - background/padding options (see styleUtils)
+ */
+const {
+    events = [
+        {
+            id: "evt-1",
+            title: "Term Start",
+            description: "First day of the new term",
+            location: "Main Campus",
+            start: new Date().toISOString(),
+            end: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        },
+        {
+            id: "evt-2",
+            title: "Mid-term Exams",
+            description: "Mid-term examination window",
+            location: "Examination Halls",
+            start: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+        },
+    ],
+    calendarName = "School Academic Calendar",
+    background = "base",
+    padding,
+    paddingTop,
+    paddingBottom,
+} = Astro.props as {
+    events?: CalendarEvent[];
+    calendarName?: string;
+    background?: ThemeColor;
+    padding?: PaddingSize;
+    paddingTop?: PaddingSize;
+    paddingBottom?: PaddingSize;
+};
+
+const bgClass = getBackgroundColor(background);
+const textClass = getTextColor(background);
+const paddingClass = getPaddingClass({ padding, paddingTop, paddingBottom });
+
+const id = `academic-calendar-${Math.random().toString(36).slice(2, 9)}`;
+const eventsJson = JSON.stringify(events || []);
+
+/**
+ * Server-side date formatter used when rendering the template.
+ * Kept in the frontmatter so it's available during SSR.
+ */
+function formatDisplayDate(iso: string | undefined | null) {
+    try {
+        if (!iso) return "";
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return String(iso);
+        return d.toLocaleString(undefined, {
+            weekday: "short",
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    } catch (e) {
+        return String(iso);
+    }
+}
+---
+
+<section class:list={["relative", bgClass, paddingClass]}>
+    <div class="site-container px-4">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <div class:list={["text-eyebrow mb-1", textClass]}>
+                    Academics
+                </div>
+                <h2 class:list={[textClass]}>Academic calendar</h2>
+                <p class:list={["mt-2", textClass, "opacity-90"]}>
+                    Important dates, exam windows and events. Download
+                    individual events or the full calendar as an <code
+                        >.ics</code
+                    > file.
+                </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button
+                    id={`${id}-download-all`}
+                    class="inline-flex items-center px-4 py-2 rounded bg-primary text-white"
+                    aria-label="Download full calendar as ICS"
+                >
+                    Download calendar (.ics)
+                </button>
+            </div>
+        </div>
+
+        <div
+            id={id}
+            data-events={eventsJson}
+            data-calendar-name={calendarName}
+            aria-live="polite"
+        >
+            <ul class="space-y-4">
+                {
+                    events.map((evt) => (
+                        <li class="p-4 rounded-lg border border-black bg-background/90 flex flex-col md:flex-row md:items-center md:justify-between">
+                            <div class="mb-3 md:mb-0">
+                                <div class:list={["text-h5", textClass]}>
+                                    {evt.title}
+                                </div>
+                                <div class="text-sm opacity-90 mt-1">
+                                    {evt.description && (
+                                        <span class="block">
+                                            {evt.description}
+                                        </span>
+                                    )}
+                                    <div class="mt-1">
+                                        <time class="mr-3">
+                                            {formatDisplayDate(evt.start)}
+                                        </time>
+                                        {evt.end && (
+                                            <time>
+                                                — {formatDisplayDate(evt.end!)}
+                                            </time>
+                                        )}
+                                        {evt.location && (
+                                            <span class="ml-2 opacity-80">
+                                                • {evt.location}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3">
+                                <a
+                                    class="inline-flex items-center px-3 py-2 rounded bg-surface text-primary"
+                                    href="#"
+                                    role="button"
+                                    data-ics-event-id={evt.id}
+                                    aria-label={`Download ${evt.title} as ICS`}
+                                >
+                                    Export event
+                                </a>
+                                <a
+                                    class="inline-flex items-center px-3 py-2 rounded border border-black bg-background/80"
+                                    href="#"
+                                    role="button"
+                                    data-ics-add-calendar={evt.id}
+                                    aria-label={`Add ${evt.title} to calendar`}
+                                >
+                                    Add
+                                </a>
+                            </div>
+                        </li>
+                    ))
+                }
+            </ul>
+        </div>
+    </div>
+
+    <script type="module">
+        // Client-side calendar (.ics) generator (cleaned, no Astro.inject, no TS-only casts)
+        (function () {
+            if (typeof document === "undefined") return;
+            const scriptEl = document.currentScript;
+            const root = scriptEl
+                ? scriptEl.parentElement
+                : document.querySelector("[data-events]");
+            if (!root) return;
+
+            // Parse events passed from server
+            const eventsDataAttr = root.getAttribute("data-events") || "[]";
+            let eventsList;
+            try {
+                eventsList = JSON.parse(eventsDataAttr);
+            } catch (e) {
+                console.error(
+                    "AcademicCalendarWidget: failed to parse events JSON",
+                    e,
+                );
+                eventsList = [];
+            }
+
+            // Helper to format date for ICS: YYYYMMDDTHHMMSSZ (UTC)
+            function toICSDate(dtString) {
+                const d = new Date(dtString);
+                // Ensure valid date
+                if (isNaN(d.getTime())) {
+                    // treat as all-day ISO date (YYYY-MM-DD)
+                    const m = (dtString || "").match(/^(\d{4}-\d{2}-\d{2})/);
+                    if (m) {
+                        return m[1].replace(/-/g, "") + "T000000Z";
+                    }
+                    return null;
+                }
+                return d
+                    .toISOString()
+                    .replace(/[-:]/g, "")
+                    .replace(/\.\d{3}Z$/, "Z");
+            }
+
+            function uidFor(evt) {
+                if (evt && evt.id) return `${evt.id}@pbv-school.local`;
+                return `${Math.random().toString(36).slice(2, 9)}@pbv-school.local`;
+            }
+
+            function escapeText(str) {
+                return (str || "")
+                    .toString()
+                    .replace(/\n/g, "\\n")
+                    .replace(/[,;\\]/g, function (m) {
+                        return "\\" + m;
+                    });
+            }
+
+            function buildICS(eventsArray, name) {
+                const prodid = "-//PBV School//Academic Calendar//EN";
+                const now = new Date()
+                    .toISOString()
+                    .replace(/[-:]/g, "")
+                    .replace(/\.\d{3}Z$/, "Z");
+                const lines = [
+                    "BEGIN:VCALENDAR",
+                    "VERSION:2.0",
+                    `PRODID:${prodid}`,
+                    `NAME:${escapeText(name)}`,
+                    `X-WR-CALNAME:${escapeText(name)}`,
+                    `METHOD:PUBLISH`,
+                ];
+
+                eventsArray.forEach((evt) => {
+                    const dtStart = toICSDate(evt.start);
+                    const dtEnd = toICSDate(evt.end || evt.start);
+                    if (!dtStart) return;
+                    lines.push("BEGIN:VEVENT");
+                    lines.push(`UID:${uidFor(evt)}`);
+                    lines.push(`DTSTAMP:${now}`);
+                    lines.push(`DTSTART:${dtStart}`);
+                    if (dtEnd) lines.push(`DTEND:${dtEnd}`);
+                    if (evt.title)
+                        lines.push(`SUMMARY:${escapeText(evt.title)}`);
+                    if (evt.location)
+                        lines.push(`LOCATION:${escapeText(evt.location)}`);
+                    if (evt.description)
+                        lines.push(
+                            `DESCRIPTION:${escapeText(evt.description)}`,
+                        );
+                    lines.push("END:VEVENT");
+                });
+
+                lines.push("END:VCALENDAR");
+                return lines.join("\\r\\n");
+            }
+
+            function downloadICS(text, filename) {
+                const blob = new Blob([text], {
+                    type: "text/calendar;charset=utf-8",
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 5000);
+            }
+
+            // Bind "Download calendar" button (find within root)
+            const btnAll = root.querySelector('[id$="-download-all"]');
+            const calendarName =
+                root.getAttribute("data-calendar-name") || "Academic calendar";
+            if (btnAll) {
+                btnAll.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    const ics = buildICS(eventsList, calendarName);
+                    downloadICS(ics, "academic-calendar.ics");
+                });
+            }
+
+            // Delegate clicks for export per event
+            root.addEventListener("click", (e) => {
+                const target = e.target;
+                if (!(target instanceof Element)) return;
+                const exportBtn = target.closest("[data-ics-event-id]");
+                if (exportBtn) {
+                    e.preventDefault();
+                    const id = exportBtn.getAttribute("data-ics-event-id");
+                    const ev =
+                        eventsList.find((x) => x && x.id == id) ||
+                        eventsList[Number(id)];
+                    if (!ev) {
+                        // If not found by id, do nothing
+                        return;
+                    }
+                    const ics = buildICS([ev], `${ev.title || "event"}`);
+                    const filename = `${(ev.title || "event").toLowerCase().replace(/\s+/g, "-")}.ics`;
+                    downloadICS(ics, filename);
+                    return;
+                }
+
+                const addBtn = target.closest("[data-ics-add-calendar]");
+                if (addBtn) {
+                    e.preventDefault();
+                    const id = addBtn.getAttribute("data-ics-add-calendar");
+                    const ev =
+                        eventsList.find((x) => x && x.id == id) ||
+                        eventsList[Number(id)];
+                    if (!ev) return;
+                    const ics = buildICS([ev], `${ev.title || "event"}`);
+                    const blob = new Blob([ics], {
+                        type: "text/calendar;charset=utf-8",
+                    });
+                    const url = URL.createObjectURL(blob);
+                    window.open(url, "_blank");
+                    setTimeout(() => URL.revokeObjectURL(url), 5000);
+                }
+            });
+        })();
+    </script>
+</section>

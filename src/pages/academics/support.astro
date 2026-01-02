@@ -1,0 +1,353 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SectionHeader from "../../components/academics/SectionHeader.astro";
+import ResourceItem from "../../components/academics/ResourceItem.astro";
+import { academicsSample } from "../../data/academics/sample";
+
+const { resources = [], faculty = [] } = academicsSample;
+
+const headerContent = {
+    eyebrow: "Academics",
+    title: "Student Support & Services",
+    description:
+        "Academic support, counseling, accommodations and enrichment services to help every student thrive. Find tutoring, counseling contacts and resources here.",
+    button: {
+        text: "Contact support",
+        link: "/academics/support#contact",
+        variant: "primary" as const,
+    },
+};
+
+/**
+ * Heuristics to find support-related resources in sample data:
+ * - subject includes 'support' or 'counsel' or 'study'
+ * - id/title contains support-related keywords
+ */
+const supportResources = resources.filter((r) => {
+    if (!r) return false;
+    const id = (r.id || "").toLowerCase();
+    const title = (r.title || "").toLowerCase();
+    const subj = (r.subject || "").toLowerCase();
+    return (
+        id.includes("support") ||
+        id.includes("counsel") ||
+        title.includes("support") ||
+        title.includes("counsel") ||
+        subj.includes("support") ||
+        subj.includes("counsel") ||
+        title.includes("study") ||
+        subj.includes("study")
+    );
+});
+
+// Simple list of counseling / support contacts from sample faculty if available
+const counselingContacts = faculty
+    .filter((f) => {
+        if (!f) return false;
+        const subs = (f.subjects || []).map((s) => String(s).toLowerCase());
+        // heuristics: faculty involved in guidance/counseling may be listed with 'counsel' or not have subjects
+        return (
+            subs.some((s) => s.includes("counsel")) ||
+            String(f.id || "")
+                .toLowerCase()
+                .includes("counsel") ||
+            String(f.name || "")
+                .toLowerCase()
+                .includes("counsel")
+        );
+    })
+    .slice(0, 5);
+---
+
+<BaseLayout>
+    <main class="site-container px-4 py-12">
+        <SectionHeader content={headerContent} />
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+            <section class="lg:col-span-2 space-y-6">
+                <div
+                    class="p-6 rounded-lg border border-black bg-background/90"
+                >
+                    <h3 class="text-h4 mb-2">Overview of support services</h3>
+                    <p class="text-sm opacity-90 mb-3">
+                        We provide a range of student support services including
+                        academic tutoring, subject clinics, counseling, exam
+                        accommodations and learning resources. Support is
+                        coordinated by the academic office and the student
+                        support team — reach out if you or your child need
+                        personalized assistance.
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div
+                            class="p-4 rounded border border-black bg-background/80"
+                        >
+                            <h4 class="text-h6 mb-2">Academic tutoring</h4>
+                            <p class="text-sm opacity-90">
+                                Regular peer and teacher-led tutoring sessions
+                                are available for mathematics, sciences and
+                                languages. Sessions are scheduled by subject
+                                teachers and published on the academic calendar.
+                            </p>
+                        </div>
+
+                        <div
+                            class="p-4 rounded border border-black bg-background/80"
+                        >
+                            <h4 class="text-h6 mb-2">Counseling & wellbeing</h4>
+                            <p class="text-sm opacity-90">
+                                Our counseling services support student
+                                wellbeing, study skills and academic planning.
+                                Counselors work with students one-to-one or in
+                                small groups to develop strategies for success.
+                            </p>
+                        </div>
+
+                        <div
+                            class="p-4 rounded border border-black bg-background/80"
+                        >
+                            <h4 class="text-h6 mb-2">Exam accommodations</h4>
+                            <p class="text-sm opacity-90">
+                                Students with documented needs can apply for
+                                exam accommodations such as extra time, separate
+                                rooms or assistive technology. Contact the
+                                academic office with supporting documentation.
+                            </p>
+                        </div>
+
+                        <div
+                            class="p-4 rounded border border-black bg-background/80"
+                        >
+                            <h4 class="text-h6 mb-2">
+                                Study skills & enrichment
+                            </h4>
+                            <p class="text-sm opacity-90">
+                                Workshops on time management, exam technique and
+                                revision planning run periodically. We also
+                                offer enrichment modules for advanced students
+                                seeking deeper challenge.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="p-6 rounded-lg border border-black bg-background/90"
+                >
+                    <h3 class="text-h5 mb-3">How to request support</h3>
+                    <ol class="list-decimal list-inside text-sm opacity-90">
+                        <li>
+                            Contact your class teacher or subject teacher to
+                            request tutoring or clarification on learning goals.
+                        </li>
+                        <li>
+                            If you need counseling or accommodations, reach out
+                            to the Student Support team at <a
+                                class="underline"
+                                href="/contact">/contact</a
+                            > or use the form below.
+                        </li>
+                        <li>
+                            Provide any relevant documentation (e.g., medical
+                            certificates or prior assessments) for
+                            accommodations.
+                        </li>
+                        <li>
+                            Expect a follow-up from the academic office within
+                            3–5 working days to plan interventions.
+                        </li>
+                    </ol>
+                </div>
+
+                <div
+                    id="contact"
+                    class="p-6 rounded-lg border border-black bg-background/90"
+                >
+                    <h3 class="text-h5 mb-3">Request support / contact form</h3>
+
+                    <form
+                        action="/api/support-request"
+                        method="post"
+                        class="space-y-4"
+                    >
+                        <div>
+                            <label class="block text-sm mb-1"
+                                >Student name</label
+                            >
+                            <input
+                                name="studentName"
+                                required
+                                class="w-full p-2 border rounded"
+                            />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm mb-1"
+                                >Grade / Class</label
+                            >
+                            <input
+                                name="grade"
+                                class="w-full p-2 border rounded"
+                            />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm mb-1"
+                                >Email or parent contact</label
+                            >
+                            <input
+                                name="contact"
+                                type="email"
+                                required
+                                class="w-full p-2 border rounded"
+                            />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm mb-1"
+                                >Type of support required</label
+                            >
+                            <select
+                                name="supportType"
+                                class="w-full p-2 border rounded"
+                            >
+                                <option>Academic tutoring</option>
+                                <option>Counseling / wellbeing</option>
+                                <option>Exam accommodations</option>
+                                <option>Study skills / enrichment</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm mb-1"
+                                >Details / brief summary</label
+                            >
+                            <textarea
+                                name="details"
+                                rows="5"
+                                class="w-full p-2 border rounded"
+                                placeholder="Provide any relevant context or documents (links)"
+                            ></textarea>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <button
+                                type="submit"
+                                class="inline-flex items-center px-4 py-2 rounded bg-primary text-white"
+                                >Send request</button
+                            >
+                            <a
+                                href="/contact"
+                                class="inline-flex items-center px-4 py-2 rounded border border-black bg-background/90"
+                                >Contact academic office</a
+                            >
+                        </div>
+                    </form>
+                </div>
+
+                <div
+                    class="p-6 rounded-lg border border-black bg-background/90"
+                >
+                    <h3 class="text-h5 mb-3">Counseling contacts</h3>
+                    {
+                        counselingContacts && counselingContacts.length ? (
+                            <div class="space-y-3">
+                                {counselingContacts.map((c) => (
+                                    <div class="p-3 rounded border border-black bg-background/80">
+                                        <div class="font-medium">{c.name}</div>
+                                        {c.qualifications && (
+                                            <div class="text-sm opacity-80">
+                                                {c.qualifications}
+                                            </div>
+                                        )}
+                                        {c.email && (
+                                            <div class="text-xs opacity-80">
+                                                {c.email}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p class="opacity-80 text-sm">
+                                No dedicated counseling contacts listed in
+                                sample data. Please contact the academic office
+                                for referrals.
+                            </p>
+                        )
+                    }
+                </div>
+            </section>
+
+            <aside class="lg:col-span-1 space-y-6">
+                <div
+                    class="p-4 rounded-lg border border-black bg-background/90"
+                >
+                    <h5 class="text-h6 mb-2">Quick links</h5>
+                    <ul class="list-inside list-disc text-sm opacity-90">
+                        <li>
+                            <a class="underline" href="/academics"
+                                >Academics hub</a>
+                        </li>
+                        <li>
+                            <a class="underline" href="/academics/resources"
+                                >Resources & downloads</a>
+                        </li>
+                        <li>
+                            <a
+                                class="underline"
+                                href="/academics/academic-calendar"
+                                >Academic calendar</a>
+                        </li>
+                        <li>
+                            <a class="underline" href="/academics/faq"
+                                >Academic FAQ</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div
+                    class="p-4 rounded-lg border border-black bg-background/90"
+                >
+                    <h5 class="text-h6 mb-2">Support resources</h5>
+                    {
+                        supportResources && supportResources.length ? (
+                            <div class="space-y-3">
+                                {supportResources.map((r) => (
+                                    <ResourceItem resource={r} />
+                                ))}
+                            </div>
+                        ) : (
+                            <p class="opacity-80 text-sm">
+                                No support-specific files found. Visit the{" "}
+                                <a
+                                    class="underline"
+                                    href="/academics/resources"
+                                >
+                                    Resources
+                                </a>{" "}
+                                page for general downloads.
+                            </p>
+                        )
+                    }
+                </div>
+
+                <div
+                    class="p-4 rounded-lg border border-black bg-background/90"
+                >
+                    <h5 class="text-h6 mb-2">Emergency & welfare</h5>
+                    <p class="text-sm opacity-90 mb-3">
+                        For urgent welfare concerns or emergencies during school
+                        hours contact the main office or campus security
+                        immediately.
+                    </p>
+                    <a
+                        class="inline-flex items-center px-3 py-2 rounded border border-black bg-background/90"
+                        href="/contact">Contact office</a
+                    >
+                </div>
+            </aside>
+        </div>
+    </main>
+</BaseLayout>

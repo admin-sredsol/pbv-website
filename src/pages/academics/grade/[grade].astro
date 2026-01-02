@@ -1,0 +1,271 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import SectionHeader from "../../../components/academics/SectionHeader.astro";
+import CurriculumGrid from "../../../components/academics/CurriculumGrid.astro";
+import ResourceItem from "../../../components/academics/ResourceItem.astro";
+import GradeAccordion from "../../../components/academics/GradeAccordion.astro";
+import { academicsSample } from "../../../data/academics/sample";
+
+/**
+ * Provide static paths for the dynamic grade route.
+ * This collects grades from the sample data (courses, resources, subjects)
+ * and returns an array of { params: { grade } } objects for pre-rendering.
+ */
+export async function getStaticPaths() {
+    const { courses = [], resources = [], subjects = [] } = academicsSample;
+    const grades = new Set<string>();
+
+    /**
+     * Add grade entries to the set. Supports numbers, ranges like "9-11",
+     * comma lists, and labelled grades like "K".
+     *
+     * Explicitly typed to avoid implicit 'any' diagnostics.
+     */
+    function addGradeEntry(g: string | number | undefined | null) {
+        if (g === undefined || g === null) return;
+        if (typeof g === "number") {
+            grades.add(String(g));
+            return;
+        }
+
+        const s = String(g).trim();
+        // Range like "9-11"
+        const rangeMatch = s.match(/^(\d+)\s*-\s*(\d+)$/);
+        if (rangeMatch) {
+            const start = Number(rangeMatch[1]);
+            const end = Number(rangeMatch[2]);
+            if (!Number.isNaN(start) && !Number.isNaN(end)) {
+                for (let i = start; i <= end; i++) grades.add(String(i));
+                return;
+            }
+        }
+
+        // Comma-separated or single numbers in a string
+        const nums = s.match(/\d+/g);
+        if (nums && nums.length > 0) {
+            nums.forEach((n) => grades.add(String(n)));
+            return;
+        }
+
+        // Fallback: add the raw string (useful if grades are labelled like "K" or "Pre-K")
+        grades.add(s);
+    }
+
+    courses.forEach((c) => addGradeEntry(c.grade));
+    resources.forEach((r) => addGradeEntry(r.grade));
+    subjects.forEach((s) => {
+        if (s && Array.isArray(s.grades)) {
+            s.grades.forEach((g) => addGradeEntry(g));
+        }
+    });
+
+    // If nothing was discovered, fall back to a reasonable default range (1-12)
+    if (grades.size === 0) {
+        for (let i = 1; i <= 12; i++) grades.add(String(i));
+    }
+
+    const paths = Array.from(grades)
+        .map((x) => String(x))
+        .sort((a, b) => {
+            const na = Number(a);
+            const nb = Number(b);
+            if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+            return a.localeCompare(b, undefined, { numeric: true });
+        })
+        .map((grade) => ({ params: { grade } }));
+
+    return paths;
+}
+
+const { params } = Astro;
+const gradeParam = params.grade;
+
+/**
+ * Normalize grade matching:
+ * - sample data may use numbers (8) or ranges/strings ("11-12").
+ * - we'll match if course.grade equals the numeric grade OR
+ *   the course.grade string contains the grade string.
+ */
+const gradeStr = String(gradeParam).trim();
+
+const { courses = [], resources = [], subjects = [] } = academicsSample;
+
+/* Filter courses relevant to this grade */
+const matchedCourses = courses.filter((c) => {
+    if (c.grade === undefined || c.grade === null) return false;
+    const g = String(c.grade);
+    // exact numeric match
+    if (Number(g) === Number(gradeStr)) return true;
+    // range or list includes numeric grade (e.g., "11-12" or "9-11")
+    if (g.includes(String(gradeStr))) return true;
+    // if grade is like "11-12" and gradeStr is "11", includes will be true
+    return false;
+});
+
+/* Filter resources tagged for this grade */
+const matchedResources = resources.filter((r) => {
+    if (!r.grade && !r.subject) return false;
+    if (r.grade && String(r.grade) === gradeStr) return true;
+    // fallback: match by subject that appears in subjects mapping for this grade
+    if (r.subject) {
+        const subj = subjects.find(
+            (s) =>
+                s.slug === String(r.subject).toLowerCase() ||
+                s.title.toLowerCase() === String(r.subject).toLowerCase(),
+        );
+        if (subj && subj.grades && subj.grades.includes(Number(gradeStr)))
+            return true;
+    }
+    return false;
+});
+
+/* Build a simple grade accordion item for the page (overview + subjects listing) */
+const gradeAccordionItems = [
+    {
+        grade: gradeStr,
+        title: `What students learn in Grade ${gradeStr}`,
+        summary: `Overview of expectations, outcomes and assessment for Grade ${gradeStr}.`,
+        details: `<ul><li>Core subjects: Mathematics, English, Science, Social Studies</li><li>Assessments: regular tests, projects and end-of-term exams</li><li>Support: remedial classes and enrichment modules where appropriate</li></ul>`,
+    },
+];
+
+const pageHeader = {
+    eyebrow: "Academics",
+    title: `Grade ${gradeStr}`,
+    description: `Curriculum overview, courses and downloadable resources for Grade ${gradeStr}.`,
+};
+---
+
+<BaseLayout>
+    <main class="site-container px-4 py-12">
+        <SectionHeader content={pageHeader} />
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+            <!-- Main content -->
+            <section class="lg:col-span-2 space-y-8">
+                <!-- Grade overview accordion -->
+                <div>
+                    <GradeAccordion items={gradeAccordionItems} />
+                </div>
+
+                <!-- Courses -->
+                <div>
+                    <div class="mb-4">
+                        <h3 class="text-h4">Courses for Grade {gradeStr}</h3>
+                        <p class="text-sm opacity-90">
+                            Courses mapped to this grade. Click a course for
+                            syllabus and instructor details.
+                        </p>
+                    </div>
+
+                    {
+                        matchedCourses && matchedCourses.length > 0 ? (
+                            <CurriculumGrid courses={matchedCourses} />
+                        ) : (
+                            <div class="p-6 rounded-lg border border-black bg-background/90">
+                                <p class="opacity-80">
+                                    No courses explicitly mapped to Grade{" "}
+                                    {gradeStr} in the sample data.
+                                </p>
+                                <p class="mt-2 text-sm opacity-70">
+                                    You can still browse subjects or check the
+                                    state/AP curriculum pages for more details.
+                                </p>
+                            </div>
+                        )
+                    }
+                </div>
+
+                <!-- Resources -->
+                <div>
+                    <div class="mb-4">
+                        <h3 class="text-h4">Resources & downloads</h3>
+                        <p class="text-sm opacity-90">
+                            Syllabi, sample papers and handouts relevant to
+                            Grade {gradeStr}.
+                        </p>
+                    </div>
+
+                    {
+                        matchedResources && matchedResources.length > 0 ? (
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {matchedResources.map((res: any) => (
+                                    <ResourceItem resource={res} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div class="p-6 rounded-lg border border-black bg-background/90">
+                                <p class="opacity-80">
+                                    No grade-specific resources found. Visit the{" "}
+                                    <a
+                                        class="underline"
+                                        href="/academics/resources"
+                                    >
+                                        Resources
+                                    </a>{" "}
+                                    page for full downloads.
+                                </p>
+                            </div>
+                        )
+                    }
+                </div>
+            </section>
+
+            <!-- Aside -->
+            <aside class="lg:col-span-1 space-y-6">
+                <div
+                    class="p-4 rounded-lg border border-black bg-background/90"
+                >
+                    <h4 class="text-h5 mb-2">Quick links</h4>
+                    <ul class="list-inside list-disc text-sm opacity-90">
+                        <li>
+                            <a class="underline" href="/academics"
+                                >Academics hub</a
+                            >
+                        </li>
+                        <li>
+                            <a class="underline" href="/academics/subjects"
+                                >Subjects</a
+                            >
+                        </li>
+                        <li>
+                            <a class="underline" href="/academics/resources"
+                                >Resources</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                class="underline"
+                                href="/academics/academic-calendar"
+                                >Academic calendar</a
+                            >
+                        </li>
+                    </ul>
+                </div>
+
+                <div
+                    class="p-4 rounded-lg border border-black bg-background/90"
+                >
+                    <h4 class="text-h5 mb-2">Related grades</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <!-- Simple neighbors listing -->
+                        <a
+                            class="inline-block px-3 py-1 rounded border border-black bg-background/90"
+                            href={`/academics/grade/${Number(gradeStr) - 1}`}
+                            >Grade {Number(gradeStr) - 1}</a
+                        >
+                        <a
+                            class="inline-block px-3 py-1 rounded border border-black bg-background/90"
+                            href={`/academics/grade/${Number(gradeStr) + 1}`}
+                            >Grade {Number(gradeStr) + 1}</a
+                        >
+                        <a
+                            class="inline-block px-3 py-1 rounded border border-black bg-background/90"
+                            href="/academics/subjects">Subjects</a
+                        >
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+</BaseLayout>

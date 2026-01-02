@@ -1,0 +1,147 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SectionHeader from "../../components/academics/SectionHeader.astro";
+import { academicsSample } from "../../data/academics/sample";
+
+/**
+ * Build a normalized list of grade slugs from sample data.
+ * - Handles numeric grades, ranges like "9-11", comma lists and labeled grades like "K".
+ */
+const { courses = [], resources = [], subjects = [] } = academicsSample;
+
+const gradeSet = new Set();
+
+/** Add a single grade entry which may be string/number/range/list */
+function addGradeEntry(g: any) {
+    if (g === undefined || g === null) return;
+    if (typeof g === "number") {
+        gradeSet.add(String(g));
+        return;
+    }
+
+    const s = String(g).trim();
+    // Range "9-11"
+    const range = s.match(/^(\d+)\s*-\s*(\d+)$/);
+    if (range) {
+        const start = Number(range[1]);
+        const end = Number(range[2]);
+        if (!Number.isNaN(start) && !Number.isNaN(end)) {
+            for (let i = start; i <= end; i++) gradeSet.add(String(i));
+            return;
+        }
+    }
+
+    // Comma-separated numbers or values
+    const nums = s
+        .split(",")
+        .map((p) => p.trim())
+        .filter(Boolean);
+    if (nums.length > 1) {
+        nums.forEach((n) => {
+            const matchNum = n.match(/^\d+$/);
+            gradeSet.add(matchNum ? n : n);
+        });
+        return;
+    }
+
+    // If any numbers inside string, add them
+    const foundNums = s.match(/\d+/g);
+    if (foundNums && foundNums.length) {
+        foundNums.forEach((n) => gradeSet.add(String(n)));
+        return;
+    }
+
+    // fallback: add raw label ("K", "Pre-K", "11-12" if parsing failed)
+    if (s) gradeSet.add(s);
+}
+
+courses.forEach((c: any) => addGradeEntry(c.grade));
+resources.forEach((r: any) => addGradeEntry(r.grade));
+subjects.forEach((s: any) => {
+    if (s && Array.isArray(s.grades))
+        s.grades.forEach((g: any) => addGradeEntry(g));
+});
+
+// fallback default
+if (gradeSet.size === 0) {
+    for (let i = 1; i <= 12; i++) gradeSet.add(String(i));
+}
+
+// Create a stable sort: numeric grades first in ascending order, then strings
+const grades = Array.from(gradeSet)
+    .map((g) => String(g))
+    .sort((a, b) => {
+        const na = Number(a);
+        const nb = Number(b);
+        if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+        if (!Number.isNaN(na)) return -1;
+        if (!Number.isNaN(nb)) return 1;
+        return a.localeCompare(b, undefined, { numeric: true });
+    });
+
+const header = {
+    eyebrow: "Academics",
+    title: "Grades",
+    description:
+        "Browse curriculum overviews, courses and resources by grade. Select a grade to view courses, syllabi and downloads.",
+};
+---
+
+<BaseLayout>
+    <main class="site-container px-4 py-12">
+        <SectionHeader content={header} />
+
+        <section class="mt-8">
+            <div class="mb-6">
+                <h3 class="text-h4">Available grades</h3>
+                <p class="text-sm opacity-90 mt-2">
+                    Select a grade to view the curriculum overview, mapped
+                    courses and downloadable resources.
+                </p>
+            </div>
+
+            <div
+                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"
+            >
+                {
+                    grades.map((g: any) => {
+                        // Use numeric value where applicable for display consistency
+                        const isNumeric = !Number.isNaN(Number(g));
+                        const display = isNumeric ? `Grade ${g}` : String(g);
+                        return (
+                            <a
+                                class="p-4 rounded-lg border border-black bg-background/90 hover:shadow-md inline-block text-center no-underline"
+                                href={`/academics/grade/${g}`}
+                            >
+                                <div class="font-medium">{display}</div>
+                            </a>
+                        );
+                    })
+                }
+            </div>
+
+            <div class="mt-8">
+                <h4 class="text-h5 mb-2">Related curriculum hubs</h4>
+                <div class="flex flex-wrap gap-3">
+                    <a
+                        class="inline-flex items-center px-3 py-2 rounded border border-black bg-background/90"
+                        href="/academics/ap-curriculum">AP Curriculum</a
+                    >
+                    <a
+                        class="inline-flex items-center px-3 py-2 rounded border border-black bg-background/90"
+                        href="/academics/state-board-curriculum"
+                        >State Board Curriculum</a
+                    >
+                    <a
+                        class="inline-flex items-center px-3 py-2 rounded border border-black bg-background/90"
+                        href="/academics/subjects">Subjects</a
+                    >
+                    <a
+                        class="inline-flex items-center px-3 py-2 rounded border border-black bg-background/90"
+                        href="/academics/resources">Resources</a
+                    >
+                </div>
+            </div>
+        </section>
+    </main>
+</BaseLayout>

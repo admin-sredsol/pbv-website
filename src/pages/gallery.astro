@@ -1,0 +1,81 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import InnerHero from "../components/sections/InnerHero.astro";
+import { listR2Albums, getAlbumCover } from "../utils/r2";
+import heroBg from "../assets/InnerHero-bg.jpg"; // Adjust path as needed
+
+const bucket = "website-gallery";
+const albumsPrefix = "albums/";
+
+// Fetch all album prefixes
+const albumPrefixes = await listR2Albums(bucket, albumsPrefix);
+
+// For each album, get its cover image (first file in the album)
+const albums = await Promise.all(
+    albumPrefixes.map(async (prefix) => {
+        const cover = await getAlbumCover(bucket, prefix);
+        // Create a readable album label from the prefix
+        const label = prefix
+            .replace(/^albums\//, "")
+            .replace(/\/$/, "")
+            .replace(/[-_]/g, " ");
+        return {
+            prefix,
+            label,
+            cover,
+        };
+    }),
+);
+import Breadcrumbs from "../components/ui/Breadcrumbs.astro";
+import { getBreadcrumbs } from "../utils/getBreadcrumbs";
+const breadcrumbs = getBreadcrumbs(Astro.url.pathname);
+---
+
+<BaseLayout title="Photos">
+    <InnerHero
+        content={{
+            title: "Photo Albums",
+            description: "Browse our albums and relive your favorite moments.",
+            backgroundImage: heroBg,
+            overlayOpacity: 0.6,
+        }}
+    />
+
+    <div class="max-w-full mx-auto px-4 py-6">
+        <Breadcrumbs crumbs={breadcrumbs} />
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+            {
+                albums.map((album) => (
+                    <a
+                        href={`/gallery/${encodeURIComponent(album.label)}`}
+                        class="block group rounded-lg overflow-hidden shadow bg-white hover:shadow-lg transition-shadow duration-200"
+                        title={album.label}
+                    >
+                        <div class="aspect-square bg-gray-100 flex items-center justify-center">
+                            {album.cover ? (
+                                <img
+                                    src={album.cover.url}
+                                    alt={album.label + " cover"}
+                                    class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                    loading="lazy"
+                                />
+                            ) : (
+                                <span class="text-gray-400 text-lg">
+                                    No cover image
+                                </span>
+                            )}
+                        </div>
+                        <div class="p-4 text-center">
+                            <span class="block text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+                                {album.label}
+                            </span>
+                            <span class="block text-xs text-gray-500 mt-1">
+                                {album.prefix}
+                            </span>
+                        </div>
+                    </a>
+                ))
+            }
+        </div>
+    </div>
+</BaseLayout>

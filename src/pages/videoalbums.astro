@@ -1,0 +1,83 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import InnerHero from "../components/sections/InnerHero.astro";
+import { listR2Albums, getAlbumCover } from "../utils/r2";
+import heroBg from "../assets/InnerHero-bg.jpg"; // Adjust path as needed
+
+const bucket = "website-gallery";
+const albumsPrefix = "videoalbums/";
+
+// Fetch all video album prefixes
+const albumPrefixes = await listR2Albums(bucket, albumsPrefix);
+
+// For each album, get its cover video (first file in the album)
+const albums = await Promise.all(
+    albumPrefixes.map(async (prefix) => {
+        const cover = await getAlbumCover(bucket, prefix);
+        // Create a readable album label from the prefix
+        const label = prefix
+            .replace(/^videoalbums\//, "")
+            .replace(/\/$/, "")
+            .replace(/[-_]/g, " ");
+        return {
+            prefix,
+            label,
+            cover,
+        };
+    }),
+);
+import Breadcrumbs from "../components/ui/Breadcrumbs.astro";
+import { getBreadcrumbs } from "../utils/getBreadcrumbs";
+const breadcrumbs = getBreadcrumbs(Astro.url.pathname);
+---
+
+<BaseLayout title="Videos">
+    <InnerHero
+        content={{
+            title: "Video Albums",
+            description:
+                "Browse our video albums and relive your favorite moments.",
+            backgroundImage: heroBg,
+            overlayOpacity: 0.6,
+        }}
+    />
+
+    <div class="max-w-full mx-auto px-4 py-6">
+        <Breadcrumbs crumbs={breadcrumbs} />
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+            {
+                albums.map((album) => (
+                    <a
+                        href={`/videoalbums/${encodeURIComponent(album.label)}`}
+                        class="block group rounded-lg overflow-hidden shadow bg-white hover:shadow-lg transition-shadow duration-200"
+                        title={album.label}
+                    >
+                        <div class="aspect-video bg-gray-100 flex items-center justify-center">
+                            {album.cover ? (
+                                <video
+                                    src={album.cover.url}
+                                    class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                    preload="metadata"
+                                    controls
+                                    title={album.label + " cover"}
+                                />
+                            ) : (
+                                <span class="text-gray-400 text-lg">
+                                    No cover video
+                                </span>
+                            )}
+                        </div>
+                        <div class="p-4 text-center">
+                            <span class="block text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+                                {album.label}
+                            </span>
+                            <span class="block text-xs text-gray-500 mt-1">
+                                {album.prefix}
+                            </span>
+                        </div>
+                    </a>
+                ))
+            }
+        </div>
+    </div>
+</BaseLayout>

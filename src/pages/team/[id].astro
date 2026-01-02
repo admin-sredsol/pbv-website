@@ -1,0 +1,59 @@
+---
+import { getCollection, getEntryBySlug } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumbs from "../../components/ui/Breadcrumbs.astro";
+import { getBreadcrumbs } from "../../utils/getBreadcrumbs";
+
+export async function getStaticPaths() {
+    const team = await getCollection("team");
+    return team.map((member) => ({
+        params: { id: member.slug },
+    }));
+}
+
+const { id } = Astro.params;
+const member = await getEntryBySlug("team", id);
+
+if (!member) {
+    throw new Error(`Team member not found: ${id}`);
+}
+import InnerHero from "../../components/sections/InnerHero.astro";
+import heroBg from "../../assets/InnerHero-bg.jpg";
+---
+
+<BaseLayout>
+    <InnerHero
+        content={{
+            title: "Member Profile",
+            description:
+                "we are committed to nurturing young minds and fostering a love for learning",
+            backgroundImage: heroBg,
+            overlayOpacity: 0.6,
+        }}
+    />
+    <div class="max-w-2xl mx-auto py-16 px-4">
+        <Breadcrumbs crumbs={getBreadcrumbs(Astro.url.pathname)} />
+        <article>
+            <h1 class="text-3xl font-bold mb-2">{member.data.name}</h1>
+            <h2 class="text-lg text-gray-500 mb-2">{member.data.jobTitle}</h2>
+            {
+                member.data.department && (
+                    <span class="inline-block bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full mb-6">
+                        {member.data.department}
+                    </span>
+                )
+            }
+            {
+                member.data.headshot && (
+                    <img
+                        src={member.data.headshot}
+                        alt={member.data.name}
+                        class="w-40 h-40 rounded-full object-cover mb-6"
+                    />
+                )
+            }
+            {member.data.bio && <p class="mb-6">{member.data.bio}</p>}
+            <div class="prose">{member.body}</div>
+        </article>
+    </div>
+</BaseLayout>

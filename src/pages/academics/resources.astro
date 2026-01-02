@@ -1,0 +1,179 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SectionHeader from "../../components/academics/SectionHeader.astro";
+import ResourceItem from "../../components/academics/ResourceItem.astro";
+import { academicsSample } from "../../data/academics/sample";
+
+const { resources } = academicsSample;
+
+const headerContent = {
+    eyebrow: "Academics",
+    title: "Resources & Downloads",
+    description:
+        "Syllabi, sample papers, handouts and policy documents for students and parents. Use the filters or search to find files relevant to your grade or subject.",
+    button: {
+        text: "Academic calendar",
+        link: "/academics/academic-calendar",
+        variant: "ghostLight",
+    },
+} as const;
+---
+
+<BaseLayout>
+    <main class="site-container px-4 py-12">
+        <SectionHeader content={headerContent} />
+
+        <section class="mt-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                <div>
+                    <label for="resource-search" class="sr-only"
+                        >Search resources</label
+                    >
+                    <input
+                        id="resource-search"
+                        type="search"
+                        placeholder="Search resources (title, subject)"
+                        class="w-full md:w-96 px-4 py-2 rounded border border-black bg-input text-input-text"
+                    />
+                </div>
+
+                <div>
+                    <label for="resource-subject" class="sr-only"
+                        >Filter by subject</label
+                    >
+                    <select
+                        id="resource-subject"
+                        class="w-full md:w-64 px-3 py-2 rounded border border-black bg-background text-input-text"
+                    >
+                        <option value="all">All subjects</option>
+                        {
+                            // build unique subject list from resources
+                            Array.from(
+                                new Set(
+                                    resources
+                                        .map((r) =>
+                                            (r.subject || "")
+                                                .toString()
+                                                .toLowerCase(),
+                                        )
+                                        .filter(Boolean),
+                                ),
+                            ).map((sub) => (
+                                <option value={sub}>
+                                    {sub[0].toUpperCase() + sub.slice(1)}
+                                </option>
+                            ))
+                        }
+                    </select>
+                </div>
+
+                <div>
+                    <label for="resource-type" class="sr-only"
+                        >Filter by file type</label
+                    >
+                    <select
+                        id="resource-type"
+                        class="w-full md:w-48 px-3 py-2 rounded border border-black bg-background text-input-text"
+                    >
+                        <option value="all">All types</option>
+                        {
+                            Array.from(
+                                new Set(
+                                    resources.map((r) =>
+                                        (r.type || "other")
+                                            .toString()
+                                            .toLowerCase(),
+                                    ),
+                                ),
+                            ).map((t) => (
+                                <option value={t}>{t.toUpperCase()}</option>
+                            ))
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <div
+                    id="resources-grid"
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
+                    {
+                        resources.map((res) => (
+                            <div
+                                data-title={(res.title || "")
+                                    .toString()
+                                    .toLowerCase()}
+                                data-subject={(res.subject || "")
+                                    .toString()
+                                    .toLowerCase()}
+                                data-type={(res.type || "other")
+                                    .toString()
+                                    .toLowerCase()}
+                            >
+                                <ResourceItem resource={res} />
+                            </div>
+                        ))
+                    }
+                </div>
+            </div>
+
+            <div class="mt-8 text-sm opacity-80">
+                <p>
+                    Tip: use the search box to quickly find a resource by name
+                    or subject. Click <strong>Download</strong> to open or save a
+                    file.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        // Lightweight client-side filtering for the resources page.
+        (function () {
+            if (typeof document === "undefined") return;
+
+            const grid = document.getElementById("resources-grid");
+            const searchInput = document.getElementById("resource-search");
+            const subjectSelect = document.getElementById("resource-subject");
+            const typeSelect = document.getElementById("resource-type");
+
+            function normalize(v) {
+                return (v || "").toString().trim().toLowerCase();
+            }
+
+            function applyFilters() {
+                const q = normalize(searchInput.value);
+                const subj = normalize(subjectSelect.value);
+                const type = normalize(typeSelect.value);
+
+                const items = grid.querySelectorAll("[data-title]");
+                items.forEach((item) => {
+                    const title = item.getAttribute("data-title") || "";
+                    const subject = item.getAttribute("data-subject") || "";
+                    const ftype = item.getAttribute("data-type") || "";
+
+                    let visible = true;
+                    if (q) {
+                        visible = title.includes(q) || subject.includes(q);
+                    }
+                    if (visible && subj && subj !== "all") {
+                        visible = subject === subj;
+                    }
+                    if (visible && type && type !== "all") {
+                        visible = ftype === type;
+                    }
+
+                    item.style.display = visible ? "" : "none";
+                });
+            }
+
+            searchInput.addEventListener("input", () => applyFilters());
+            subjectSelect.addEventListener("change", () => applyFilters());
+            typeSelect.addEventListener("change", () => applyFilters());
+
+            // initialize (no-op)
+            applyFilters();
+        })();
+    </script>
+</BaseLayout>

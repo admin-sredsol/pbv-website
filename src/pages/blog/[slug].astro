@@ -1,0 +1,67 @@
+---
+import { getCollection, getEntryBySlug } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumbs from "../../components/ui/Breadcrumbs.astro";
+import { getBreadcrumbs } from "../../utils/getBreadcrumbs";
+
+export async function getStaticPaths() {
+    const posts = await getCollection("blog");
+    return posts.map((post) => ({
+        params: { slug: post.slug },
+    }));
+}
+
+const { slug } = Astro.params;
+const post = await getEntryBySlug("blog", slug);
+
+if (!post) {
+    throw new Error(`Blog post not found: ${slug}`);
+}
+const breadcrumbs = getBreadcrumbs(Astro.url.pathname);
+const { Content } = await post.render();
+import InnerHero from "../../components/sections/InnerHero.astro";
+import heroBg from "../../assets/InnerHero-bg.jpg";
+---
+
+<BaseLayout
+    ><InnerHero
+        content={{
+            title: "Blog Article",
+            description:
+                "we are committed to nurturing young minds and fostering a love for learning",
+            backgroundImage: heroBg,
+            overlayOpacity: 0.6,
+        }}
+    />
+    <article class="max-w-7xl mx-auto py-16 px-4">
+        <Breadcrumbs crumbs={breadcrumbs} />
+        <h1 class="text-3xl font-bold mb-2">{post.data.title}</h1>
+        <div class="text-sm text-gray-500 mb-6">
+            {post.data.pubDate.toLocaleDateString()}
+            {post.data.author && <> by {post.data.author}</>}
+        </div>
+        {
+            post.data.cover && (
+                <img
+                    src={post.data.cover}
+                    alt={post.data.title}
+                    class="mb-6 rounded w-full h-64 object-cover"
+                />
+            )
+        }
+        <section class="prose">
+            <Content />
+        </section>
+        {
+            post.data.tags && (
+                <div class="mt-6 flex flex-wrap gap-2">
+                    {post.data.tags.map((tag) => (
+                        <span class="bg-gray-200 text-gray-700 px-2 py-1 rounded text-xs">
+                            {tag}
+                        </span>
+                    ))}
+                </div>
+            )
+        }
+    </article>
+</BaseLayout>

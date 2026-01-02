@@ -1,0 +1,248 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SectionHeader from "../../components/academics/SectionHeader.astro";
+import CurriculumGrid from "../../components/academics/CurriculumGrid.astro";
+import CourseCard from "../../components/academics/CourseCard.astro";
+import ResourceItem from "../../components/academics/ResourceItem.astro";
+import AcademicCalendarWidget from "../../components/academics/AcademicCalendarWidget.astro";
+import { academicsSample } from "../../data/academics/sample";
+
+const {
+    courses = [],
+    resources = [],
+    events = [],
+    faculty = [],
+} = academicsSample;
+
+const apCourses = courses.filter((c) => String(c.type).toLowerCase() === "ap");
+const apResources = resources.filter((r) => {
+    // include resources that reference AP in id or title or subject
+    const id = (r.id || "").toLowerCase();
+    const title = (r.title || "").toLowerCase();
+    const subj = (r.subject || "").toLowerCase();
+    return id.includes("ap") || title.includes("ap") || subj.includes("ap");
+});
+
+// Faculty who teach AP courses (heuristic matching by subjects or course ids)
+const apFaculty = faculty.filter((f) => {
+    const subs = (f.subjects || []).map((s) => String(s).toLowerCase());
+    // match if any subject contains 'ap' or matches any ap course tag
+    if (subs.some((s) => s.includes("ap"))) return true;
+    return apCourses.some((c) => {
+        const tags = (c.tags || []).map((t) => String(t).toLowerCase());
+        return tags.some((t) => subs.includes(t) || t.includes("ap"));
+    });
+});
+
+const headerContent = {
+    eyebrow: "Academics",
+    title: "AP Curriculum",
+    description:
+        "Advanced Placement (AP) courses provide college-level academic challenge and the opportunity to earn college credit. Explore AP course offerings, exam support, faculty and downloadable syllabi.",
+    button: { text: "Admissions & AP Pathway", link: "/admissions" },
+};
+---
+
+<BaseLayout>
+    <main class="site-container px-4 py-12">
+        <SectionHeader content={headerContent} />
+
+        <section class="mt-8">
+            <div class="mb-6">
+                <h3 class="text-h4">AP Course Catalog</h3>
+                <p class="mt-2 text-sm opacity-90">
+                    The AP program offers a selection of subjects across
+                    sciences, mathematics and humanities. Below are AP courses
+                    currently offered; click a course to view the syllabus and
+                    instructor details.
+                </p>
+            </div>
+
+            <div class="mb-8">
+                {
+                    apCourses.length ? (
+                        <div class="site-container px-0">
+                            <div class="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                                {apCourses.map((c) => {
+                                    const slug = c.id
+                                        ? String(c.id).trim()
+                                        : c.code
+                                          ? String(c.code).trim()
+                                          : String(c.title || "")
+                                                .toLowerCase()
+                                                .trim()
+                                                .replace(/\s+/g, "-");
+                                    return (
+                                        <a
+                                            href={`/academics/ap-curriculum/${slug}`}
+                                            class="block no-underline"
+                                        >
+                                            <CourseCard
+                                                course={c}
+                                                background="base"
+                                            />
+                                        </a>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ) : (
+                        <div class="p-6 rounded-lg border border-black bg-background/90">
+                            <p class="opacity-80">
+                                No AP courses are listed in the sample data yet.
+                            </p>
+                        </div>
+                    )
+                }
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-6">
+                    <div
+                        class="p-6 rounded-lg border border-black bg-background/90"
+                    >
+                        <h4 class="text-h5 mb-2">Exam & College Preparation</h4>
+                        <p class="opacity-90 mb-3">
+                            AP students receive structured exam preparation
+                            including mock exams, topic revision sessions and
+                            college credit counselling. We encourage students to
+                            consult teachers for recommended exam registration
+                            and preparation plans.
+                        </p>
+
+                        <ul class="list-disc list-inside text-sm opacity-90">
+                            <li>
+                                Regular mock/AP-style assessments and feedback
+                            </li>
+                            <li>AP study workshops during revision weeks</li>
+                            <li>
+                                One-to-one college counseling for AP credit
+                                transfer
+                            </li>
+                            <li>
+                                Access to past papers and curated practice
+                                materials
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div
+                        class="p-6 rounded-lg border border-black bg-background/90"
+                    >
+                        <h4 class="text-h5 mb-2">Faculty spotlight</h4>
+                        <p class="opacity-90 mb-4">
+                            AP instructors and their specialties.
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {
+                                apFaculty.length ? (
+                                    apFaculty.map((f) => (
+                                        <div class="p-4 rounded border border-black bg-background/80">
+                                            <div class="flex items-start gap-4">
+                                                {f.photo ? (
+                                                    <img
+                                                        src={f.photo}
+                                                        alt={f.name}
+                                                        class="w-12 h-12 object-cover rounded"
+                                                    />
+                                                ) : (
+                                                    <div class="w-12 h-12 bg-surface rounded" />
+                                                )}
+                                                <div>
+                                                    <div class="font-medium">
+                                                        {f.name}
+                                                    </div>
+                                                    {f.qualifications && (
+                                                        <div class="text-sm opacity-80">
+                                                            {f.qualifications}
+                                                        </div>
+                                                    )}
+                                                    {f.subjects && (
+                                                        <div class="text-xs opacity-80 mt-1">
+                                                            {f.subjects.join(
+                                                                ", ",
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p class="opacity-80">
+                                        No AP faculty listed in sample data.
+                                    </p>
+                                )
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <aside class="lg:col-span-1 space-y-6">
+                    <div
+                        class="p-6 rounded-lg border border-black bg-background/90"
+                    >
+                        <h5 class="text-h6 mb-2">Key resources</h5>
+                        {
+                            apResources.length ? (
+                                <div class="space-y-3">
+                                    {apResources.map((r) => (
+                                        <ResourceItem resource={r} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <p class="opacity-80 text-sm">
+                                    No AP-specific resources in sample data; see
+                                    general resources page for more downloads.
+                                </p>
+                            )
+                        }
+                    </div>
+
+                    <div
+                        class="p-6 rounded-lg border border-black bg-background/90"
+                    >
+                        <h5 class="text-h6 mb-2">Upcoming AP-related events</h5>
+                        <p class="text-sm opacity-90 mb-3">
+                            Mock exams, revision workshops and counselling
+                            sessions are listed in the academic calendar.
+                        </p>
+                        <a
+                            class="inline-flex items-center px-3 py-2 rounded bg-primary text-white"
+                            href="/academics/academic-calendar">View calendar</a
+                        >
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <section class="mt-10">
+            <AcademicCalendarWidget events={events} />
+        </section>
+
+        <section class="mt-10">
+            <div class="p-6 rounded-lg border border-black bg-background/90">
+                <h4 class="text-h5 mb-2">How to enroll in AP courses</h4>
+                <p class="text-sm opacity-90 mb-3">
+                    Enrollment in AP courses typically requires a teacher
+                    recommendation or meeting course prerequisites. Contact the
+                    academic office or your counselor to discuss suitability and
+                    placement.
+                </p>
+                <div class="flex gap-3">
+                    <a
+                        href="/admissions"
+                        class="inline-flex items-center px-4 py-2 rounded bg-primary text-white"
+                        >Admissions & AP Pathway</a
+                    >
+                    <a
+                        href="/contact"
+                        class="inline-flex items-center px-4 py-2 rounded border border-black bg-background/90"
+                        >Contact academic office</a
+                    >
+                </div>
+            </div>
+        </section>
+    </main>
+</BaseLayout>

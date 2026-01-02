@@ -1,0 +1,108 @@
+---
+import Eyebrow from "../ui/Eyebrow.astro";
+import { getBackgroundColor, getTextColor } from "../../utils/styleUtils";
+
+/**
+ * Props:
+ * - title: string
+ * - description: string
+ * - cover?: string
+ * - slug: string
+ * - author?: string
+ * - authorAvatar?: string
+ * - pubDate: Date
+ * - tags?: string[]
+ * - featured?: boolean
+ * - background?: ThemeColor ("base" | "light" | "dark")
+ * - text?: string (Tailwind text color class)
+ * - className?: string
+ */
+const {
+    title,
+    description,
+    cover,
+    slug,
+    author,
+    authorAvatar,
+    pubDate,
+    tags = [],
+    featured = false,
+    background = "light",
+    text,
+    className = "",
+} = Astro.props;
+
+const cardBg = getBackgroundColor(background);
+const cardText = text || getTextColor(background);
+---
+
+<a
+    href={`/blog/${slug}`}
+    class={`relative group block rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-200 overflow-hidden border border-gray-100 hover:border-primary ${cardBg} ${cardText} ${className}`}
+>
+    {
+        featured && (
+            <span class="absolute top-4 left-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow z-20">
+                Featured
+            </span>
+        )
+    }
+    {
+        cover && (
+            <img
+                src={cover}
+                alt={title}
+                class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
+                loading="lazy"
+            />
+        )
+    }
+    <div class="p-6 flex flex-col h-full">
+        <Eyebrow
+            text={tags[0] || "News"}
+            background={background}
+            className="mb-2"
+        />
+        <h2
+            class="text-xl font-bold mb-2 group-hover:text-primary transition-colors"
+        >
+            {title}
+        </h2>
+        <p class="mb-3 flex-1">{description}</p>
+        <div class="flex items-center text-xs text-gray-400 mb-2">
+            {
+                authorAvatar && (
+                    <img
+                        src={authorAvatar}
+                        alt={author}
+                        class="w-6 h-6 rounded-full mr-2 object-cover border"
+                    />
+                )
+            }
+            <span
+                >{
+                    pubDate instanceof Date
+                        ? pubDate.toLocaleDateString()
+                        : pubDate
+                }</span
+            >
+            {author && <span class="ml-2">by {author}</span>}
+        </div>
+        {
+            tags.length > 0 && (
+                <div class="flex flex-wrap gap-2 mb-2">
+                    {tags.map((tag) => (
+                        <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">
+                            {tag}
+                        </span>
+                    ))}
+                </div>
+            )
+        }
+        <span
+            class="inline-block mt-auto text-primary font-semibold group-hover:underline"
+        >
+            Read More →
+        </span>
+    </div>
+</a>

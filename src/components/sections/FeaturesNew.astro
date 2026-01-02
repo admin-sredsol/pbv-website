@@ -1,0 +1,88 @@
+---
+import Eyebrow from "../ui/Eyebrow.astro";
+import {
+    getBackgroundColor,
+    getTextColor,
+    getHeadlineColor,
+    getIconColor,
+} from "../../utils/styleUtils";
+import type { ThemeColor } from "../../utils/styleUtils";
+import { features as defaultFeatures } from "../../data/feature";
+
+export interface Feature {
+    title: string;
+    description: string;
+    icon: any; // Astro component
+}
+
+const {
+    eyebrow,
+    heading = "Designed for business teams like yours",
+    description = "Here at Flowbite we focus on markets where technology, innovation, and capital can unlock long-term value and drive economic growth.",
+    features,
+    background = "base",
+    cardBackground,
+    cardText,
+    cardHeadline,
+} = Astro.props;
+
+const sectionBg = getBackgroundColor(background);
+const textColor = getTextColor(background);
+const headlineColor = getHeadlineColor(background);
+
+const cardBg = getBackgroundColor(cardBackground ?? background);
+const cardTextColor = getTextColor(cardText ?? background);
+const cardHeadlineColor = getHeadlineColor(cardHeadline ?? background);
+const iconColor = getIconColor(cardBackground ?? background);
+
+const featuresData = features ?? defaultFeatures;
+---
+
+<section class={sectionBg}>
+    <div class="py-8 px-4 mx-auto max-w-screen-xl sm:py-16 lg:px-6">
+        <div class="mx-auto max-w-screen-md mb-8 lg:mb-16 text-center">
+            {eyebrow && <Eyebrow text={eyebrow} background={background} />}
+            <h2
+                class={`mb-4 text-4xl tracking-tight font-extrabold ${headlineColor}`}
+                data-aos="fade-up"
+            >
+                {heading}
+            </h2>
+            <p
+                class={`${textColor} sm:text-xl`}
+                data-aos="fade-up"
+                data-aos-delay="100"
+            >
+                {description}
+            </p>
+        </div>
+        <div
+            class="space-y-8 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-12 md:space-y-0"
+        >
+            {
+                featuresData.map((feature, index) => (
+                    <div
+                        class={`p-4 rounded-lg ${cardBg}`}
+                        data-aos="fade-up"
+                        data-aos-delay={index * 100}
+                    >
+                        <div
+                            class:list={[
+                                "w-12 h-12 flex items-center justify-center rounded-lg mb-4",
+                                "bg-primary",
+                            ]}
+                        >
+                            <feature.icon size={24} class="text-white" />
+                        </div>
+                        <h3
+                            class={`mb-2 text-xl font-bold ${cardHeadlineColor}`}
+                        >
+                            {feature.title}
+                        </h3>
+                        <p class={`${cardTextColor}`}>{feature.description}</p>
+                    </div>
+                ))
+            }
+        </div>
+    </div>
+</section>

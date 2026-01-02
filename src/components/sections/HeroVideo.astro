@@ -1,0 +1,185 @@
+---
+import Button from "../ui/Button.astro";
+import { Image } from "astro:assets";
+
+interface HeroContent {
+    title: string;
+    description: string;
+    buttons?: {
+        text: string;
+        link: string;
+        variant?: "primary" | "secondary" | "ghostLight" | "ghostDark";
+        target?: string;
+    }[];
+    backgroundImage?: string | any; // Using any for now to handle both string paths and imported images
+    backgroundVideo?: string; // Single video file path or URL (legacy)
+    overlayOpacity?: number; // Value between 0 and 1
+    youtubeUrl?: string; // Optional YouTube video URL (legacy)
+    videos?: {
+        type: "youtube" | "vimeo" | "file";
+        url: string;
+        title?: string;
+    }[];
+}
+
+interface Props {
+    content: HeroContent;
+}
+
+const { content } = Astro.props;
+const opacity = content.overlayOpacity ?? 1; // Default opacity if not specified
+---
+
+<section class="header-offset relative min-h-screen w-full">
+    {
+        content.backgroundVideo ? (
+            <div class="absolute inset-0 left-0 top-0 w-full h-full overflow-hidden">
+                <video
+                    src={content.backgroundVideo}
+                    autoplay
+                    muted
+                    loop
+                    playsinline
+                    class="w-full h-full object-cover"
+                    style="object-fit: cover;"
+                />
+                <div
+                    class=" absolute inset-0 left-0 top-0 w-full h-full overflow-hidden"
+                    style={`opacity: ${opacity};`}
+                />
+            </div>
+        ) : (
+            content.backgroundImage && (
+                <div class="absolute inset-0 left-0 top-0 w-full h-full overflow-hidden">
+                    <Image
+                        src={content.backgroundImage}
+                        alt=""
+                        width={1920}
+                        height={1080}
+                        class="w-full h-full object-cover"
+                        quality={70}
+                        format="webp"
+                        loading="eager"
+                        decoding="async"
+                    />
+                    <div
+                        class="hero-background absolute inset-0 left-0 top-0 w-full h-full overflow-hidden"
+                        style={`opacity: ${opacity};`}
+                    />
+                </div>
+            )
+        )
+    }
+
+    <div
+        class="site-container mx-auto px-4 py-4 pb-[160px] sm:pb-4 relative z-10 flex flex-col md:items-center md:justify-center md:text-center"
+    >
+        <h1 class="text-white text-balance" data-aos="fade-up">
+            {content.title}
+        </h1>
+        <p
+            class="text-white mt-2 text-balance"
+            data-aos="fade-up"
+            data-aos-delay="100"
+        >
+            {content.description}
+        </p>
+        {
+            content.buttons && content.buttons.length > 0 && (
+                <div class="flex flex-wrap gap-4 mt-8" data-aos="fade-up">
+                    {content.buttons.map((button) => (
+                        <Button
+                            href={button.link}
+                            target={button.target || "_self"}
+                            variant={button.variant || "primary"}
+                        >
+                            {button.text}
+                        </Button>
+                    ))}
+                </div>
+            )
+        }
+
+        {
+            // Legacy: single YouTube video support
+            content.youtubeUrl && (
+                <div class="mt-2 flex justify-center w-full" data-aos="fade-up">
+                    <iframe
+                        width="560"
+                        height="315"
+                        src={content.youtubeUrl}
+                        title="YouTube video player"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen
+                        class="rounded-lg shadow-lg w-full max-w-2xl"
+                    />
+                </div>
+            )
+        }
+    </div>
+    {
+        content.videos && content.videos.length > 0 && (
+            <div
+                class="absolute left-0 bottom-0 w-full flex flex-row flex-nowrap gap-4 justify-center pb-4 z-20 overflow-x-auto"
+                style="scrollbar-width: thin;"
+                data-aos="fade-up"
+            >
+                {content.videos.map((video) => {
+                    // Helper functions to extract IDs
+                    const extractYouTubeId = (url: string) => {
+                        const match = url.match(
+                            /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^?&/]+)/,
+                        );
+                        return match ? match[1] : url;
+                    };
+                    const extractVimeoId = (url: string) => {
+                        const match = url.match(
+                            /(?:vimeo\.com\/(?:video\/)?)(\d+)/,
+                        );
+                        return match ? match[1] : url;
+                    };
+                    const baseClass = "rounded shadow bg-black flex-shrink-0";
+                    // Responsive width: 80vw on mobile, 240px on sm+, max-w-xs
+                    const videoWidth =
+                        "w-[80vw] max-w-xs sm:w-[240px] sm:max-w-[240px]";
+                    const videoHeight =
+                        "h-[45vw] max-h-[135px] sm:h-[135px] sm:max-h-[135px]";
+                    if (video.type === "file") {
+                        return (
+                            <video
+                                src={video.url}
+                                controls
+                                class={`${baseClass} ${videoWidth} ${videoHeight}`}
+                                title={video.title || "Video"}
+                            />
+                        );
+                    } else if (video.type === "youtube") {
+                        return (
+                            <iframe
+                                src={`https://www.youtube.com/embed/${extractYouTubeId(video.url)}`}
+                                title={video.title || "YouTube video player"}
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowfullscreen
+                                class={`${baseClass} ${videoWidth} ${videoHeight}`}
+                            />
+                        );
+                    } else if (video.type === "vimeo") {
+                        return (
+                            <iframe
+                                src={`https://player.vimeo.com/video/${extractVimeoId(video.url)}`}
+                                title={video.title || "Vimeo video player"}
+                                frameborder="0"
+                                allow="autoplay; fullscreen; picture-in-picture"
+                                allowfullscreen
+                                class={`${baseClass} ${videoWidth} ${videoHeight}`}
+                            />
+                        );
+                    }
+                    return null;
+                })}
+            </div>
+        )
+    }
+</section>

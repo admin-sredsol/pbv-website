@@ -1,0 +1,312 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SectionHeader from "../../components/academics/SectionHeader.astro";
+import CurriculumGrid from "../../components/academics/CurriculumGrid.astro";
+import SubjectCard from "../../components/academics/SubjectCard.astro";
+import ResourceItem from "../../components/academics/ResourceItem.astro";
+import AcademicCalendarWidget from "../../components/academics/AcademicCalendarWidget.astro";
+
+import { academicsSample } from "../../data/academics/sample";
+
+const {
+    courses = [],
+    subjects = [],
+    resources = [],
+    events = [],
+} = academicsSample;
+
+const headerContent = {
+    eyebrow: "Academics",
+    title: "Our Academic Programmes",
+    description:
+        "We offer both AP and State Board curricula designed to prepare students for higher education and local board success. Explore subjects, grade-level learning, resources and the academic calendar.",
+    button: {
+        text: "Admissions & Curriculum",
+        link: "/admissions",
+        variant: "primary",
+    },
+} as const;
+
+/**
+ * Build a normalized list of grades and counts for the hub.
+ * This mirrors the heuristics used by the dedicated grades pages:
+ * - numeric grades, ranges like "9-11", comma lists and labelled grades like "K".
+ */
+const gradeSet = new Set<string>();
+
+/** addGradeEntry - supports number, range, comma list, and labeled grades */
+function addGradeEntry(g: any) {
+    if (g === undefined || g === null) return;
+    if (typeof g === "number") {
+        gradeSet.add(String(g));
+        return;
+    }
+    const s = String(g).trim();
+    // Range "9-11"
+    const range = s.match(/^(\d+)\s*-\s*(\d+)$/);
+    if (range) {
+        const start = Number(range[1]);
+        const end = Number(range[2]);
+        if (!Number.isNaN(start) && !Number.isNaN(end)) {
+            for (let i = start; i <= end; i++) gradeSet.add(String(i));
+            return;
+        }
+    }
+
+    // Comma-separated values
+    const parts = s
+        .split(",")
+        .map((p) => p.trim())
+        .filter(Boolean);
+    if (parts.length > 1) {
+        parts.forEach((p) => {
+            const nmatch = p.match(/^\d+$/);
+            gradeSet.add(nmatch ? p : p);
+        });
+        return;
+    }
+
+    // Any numbers inside string
+    const nums = s.match(/\d+/g);
+    if (nums && nums.length) {
+        nums.forEach((n) => gradeSet.add(String(n)));
+        return;
+    }
+
+    // Fallback: labeled grade like "K", "Pre-K"
+    if (s) gradeSet.add(s);
+}
+
+// Collect from courses, resources and subjects
+courses.forEach((c) => addGradeEntry(c.grade));
+resources.forEach((r) => addGradeEntry(r.grade));
+subjects.forEach((s) => {
+    if (s && Array.isArray(s.grades)) s.grades.forEach((g) => addGradeEntry(g));
+});
+
+// Fallback to 1-12 if no grades detected
+if (gradeSet.size === 0) {
+    for (let i = 1; i <= 12; i++) gradeSet.add(String(i));
+}
+
+// Create a stable sorted grades array (numeric ascending first)
+const grades = Array.from(gradeSet)
+    .map((g: string) => String(g))
+    .sort((a: string, b: string) => {
+        const na = Number(a);
+        const nb = Number(b);
+        if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+        if (!Number.isNaN(na)) return -1;
+        if (!Number.isNaN(nb)) return 1;
+        return a.localeCompare(b, undefined, { numeric: true });
+    });
+
+/**
+ * Compute counts per grade for courses and resources.
+ * Uses the same matching logic as the grade page:
+ * - course.grade numeric match or includes grade string (for ranges)
+ * - resource.grade exact match OR subject mapping includes the grade
+ */
+/**
+ * @param {{ grade?: any }} course
+ * @param {string|number} gradeStr
+ */
+function courseMatchesGrade(course: any, gradeStr: string | number) {
+    if (course.grade === undefined || course.grade === null) return false;
+    const g = String(course.grade);
+    if (Number(g) === Number(gradeStr)) return true;
+    if (g.includes(String(gradeStr))) return true;
+    return false;
+}
+
+/**
+ * @param {{ grade?: any, subject?: any }} resource
+ * @param {string|number} gradeStr
+ */
+function resourceMatchesGrade(resource: any, gradeStr: string | number) {
+    if (!resource.grade && !resource.subject) return false;
+    if (resource.grade && String(resource.grade) === String(gradeStr))
+        return true;
+    if (resource.subject) {
+        const subj = subjects.find(
+            (s) =>
+                s.slug === String(resource.subject).toLowerCase() ||
+                (s.title || "").toLowerCase() ===
+                    String(resource.subject).toLowerCase(),
+        );
+        if (subj && subj.grades && subj.grades.includes(Number(gradeStr)))
+            return true;
+    }
+    return false;
+}
+
+const gradeCounts = grades.map((g) => {
+    const coursesCount = courses.filter((c) => courseMatchesGrade(c, g)).length;
+    const resourcesCount = resources.filter((r) =>
+        resourceMatchesGrade(r, g),
+    ).length;
+    return { grade: g, coursesCount, resourcesCount };
+});
+---
+
+<BaseLayout>
+    <main class="site-container px-4 py-12">
+        <!-- Header -->
+        <SectionHeader content={headerContent} />
+
+        <!-- Hub Links -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 mb-12">
+            <a
+                href="/academics/ap-curriculum"
+                class="p-6 rounded-lg border border-black bg-background/90 hover:shadow-md"
+            >
+                <div class="text-eyebrow mb-2">AP Curriculum</div>
+                <h3 class="text-h4 mb-2">Advanced Placement pathway</h3>
+                <p class="text-sm opacity-80">
+                    College-level courses and exam preparation to earn college
+                    credit and strengthen university applications.
+                </p>
+            </a>
+
+            <a
+                href="/academics/state-board-curriculum"
+                class="p-6 rounded-lg border border-black bg-background/90 hover:shadow-md"
+            >
+                <div class="text-eyebrow mb-2">State Board Curriculum</div>
+                <h3 class="text-h4 mb-2">State-aligned programs</h3>
+                <p class="text-sm opacity-80">
+                    Comprehensive state syllabus with structured assessment and
+                    board exam preparation.
+                </p>
+            </a>
+
+            <a
+                href="/academics/academic-calendar"
+                class="p-6 rounded-lg border border-black bg-background/90 hover:shadow-md"
+            >
+                <div class="text-eyebrow mb-2">Academic Calendar</div>
+                <h3 class="text-h4 mb-2">Important dates & events</h3>
+                <p class="text-sm opacity-80">
+                    Term dates, exam windows, and events. Download the calendar
+                    or individual events to your device.
+                </p>
+            </a>
+        </section>
+
+        <!-- Featured courses -->
+        <section class="mb-12">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <div class="text-eyebrow">Courses</div>
+                    <h2 class="text-h3">Featured courses</h2>
+                    <p class="mt-2 text-sm opacity-90">
+                        A sampling of AP and State Board courses offered at our
+                        school.
+                    </p>
+                </div>
+                <a href="/academics/subjects" class="text-sm underline"
+                    >Browse all subjects</a
+                >
+            </div>
+
+            <CurriculumGrid courses={courses} title={undefined} />
+        </section>
+
+        <!-- Subjects index preview -->
+        <section class="mb-12">
+            <div class="mb-6">
+                <div class="text-eyebrow">Subjects</div>
+                <h2 class="text-h3">Explore subjects</h2>
+                <p class="mt-2 text-sm opacity-90">
+                    Subjects available across grades. Click a subject to view
+                    details, topics and resources.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <SubjectCard subjects={subjects.slice(0, 3)} />
+            </div>
+            <div class="mt-4">
+                <a
+                    href="/academics/subjects"
+                    class="inline-block text-sm underline">See all subjects</a
+                >
+            </div>
+        </section>
+
+        <!-- Grades overview -->
+        <section class="mb-12">
+            <div class="mb-6">
+                <div class="text-eyebrow">Grades</div>
+                <h2 class="text-h3">Browse by grade</h2>
+                <p class="mt-2 text-sm opacity-90">
+                    Jump to grade-level pages to view curriculum overviews,
+                    mapped courses and downloadable resources.
+                </p>
+            </div>
+
+            <div
+                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"
+            >
+                {
+                    gradeCounts.map((g) => (
+                        <a
+                            href={`/academics/grade/${g.grade}`}
+                            class="block p-3 rounded border border-black bg-background/90 hover:shadow-sm no-underline"
+                        >
+                            <div class="font-medium">Grade {g.grade}</div>
+                            <div class="text-xs opacity-80 mt-1">
+                                {g.coursesCount} course
+                                {g.coursesCount !== 1 ? "s" : ""} •{" "}
+                                {g.resourcesCount} resource
+                                {g.resourcesCount !== 1 ? "s" : ""}
+                            </div>
+                        </a>
+                    ))
+                }
+            </div>
+
+            <div class="mt-6">
+                <a
+                    href="/academics/grades"
+                    class="inline-block text-sm underline"
+                    >See all grade pages</a
+                >
+            </div>
+        </section>
+
+        <!-- Resources -->
+        <section class="mb-12">
+            <div class="mb-6">
+                <div class="text-eyebrow">Resources</div>
+                <h2 class="text-h3">Syllabi & downloads</h2>
+                <p class="mt-2 text-sm opacity-90">
+                    Find syllabi, sample papers, handouts and policy documents
+                    for students and parents.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <ResourceItem resources={resources.slice(0, 2)} />
+            </div>
+
+            <div class="mt-4">
+                <a
+                    href="/academics/resources"
+                    class="inline-block text-sm underline">View all resources</a
+                >
+            </div>
+        </section>
+
+        <!-- Calendar -->
+        <section class="mb-12">
+            <AcademicCalendarWidget events={events} />
+            <div class="mt-4">
+                <a
+                    href="/academics/academic-calendar"
+                    class="inline-block text-sm underline">Open full calendar</a
+                >
+            </div>
+        </section>
+    </main>
+</BaseLayout>

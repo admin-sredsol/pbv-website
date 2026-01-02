@@ -1,0 +1,116 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Breadcrumbs from "../components/ui/Breadcrumbs.astro";
+import { getBreadcrumbs } from "../utils/getBreadcrumbs";
+import InnerHero from "../components/sections/InnerHero.astro";
+import heroBg from "../assets/InnerHero-bg.jpg";
+import BlogFilterIsland from "../components/blog/BlogFilterIsland.svelte";
+import BlogCard from "../components/blog/BlogCard.astro";
+
+const posts = (await getCollection("blog")).filter((post) => !post.data.draft);
+const sortedPosts = posts.sort(
+    (a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime(),
+);
+
+const POSTS_PER_PAGE = 5;
+
+// Prepare posts for client-side Svelte island (flatten data, add slug)
+const clientPosts = sortedPosts.map((post) => ({
+    ...post.data,
+    slug: post.slug,
+}));
+
+// Parse filters from query params
+const url = Astro.url;
+const selectedTag = url.searchParams.get("tag") || "";
+const selectedYear = url.searchParams.get("year")
+    ? Number(url.searchParams.get("year"))
+    : undefined;
+const showFeaturedOnly = url.searchParams.get("featured") === "1";
+const search = url.searchParams.get("search") || "";
+
+// Collect all tags and years for filter bar
+const allTags = Array.from(
+    new Set(sortedPosts.flatMap((post) => post.data.tags || [])),
+).sort();
+const allYears = Array.from(
+    new Set(sortedPosts.map((post) => post.data.pubDate.getFullYear())),
+).sort((a, b) => b - a);
+
+// Filter posts
+let filteredPosts = sortedPosts;
+if (selectedTag) {
+    filteredPosts = filteredPosts.filter((post) =>
+        (post.data.tags || []).includes(selectedTag),
+    );
+}
+if (selectedYear) {
+    filteredPosts = filteredPosts.filter(
+        (post) => post.data.pubDate.getFullYear() === selectedYear,
+    );
+}
+if (showFeaturedOnly) {
+    filteredPosts = filteredPosts.filter((post) => post.data.featured);
+}
+if (search) {
+    const s = search.toLowerCase();
+    filteredPosts = filteredPosts.filter(
+        (post) =>
+            post.data.title.toLowerCase().includes(s) ||
+            post.data.description.toLowerCase().includes(s) ||
+            (post.data.tags || []).some((tag) => tag.toLowerCase().includes(s)),
+    );
+}
+
+const page = Number(url.searchParams.get("page") || 1);
+const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
+const paginatedPosts = filteredPosts.slice(
+    (page - 1) * POSTS_PER_PAGE,
+    page * POSTS_PER_PAGE,
+);
+
+const breadcrumbs = getBreadcrumbs(Astro.url.pathname);
+---
+
+<BaseLayout title="Blog">
+    <InnerHero
+        content={{
+            title: "Blog",
+            description:
+                "we are committed to nurturing young minds and fostering a love for learning",
+            backgroundImage: heroBg,
+            overlayOpacity: 0.6,
+        }}
+    />
+    <div class="max-w-7xl mx-auto px-4">
+        <Breadcrumbs crumbs={breadcrumbs} />
+        <BlogFilterIsland client:load posts={clientPosts} />
+        <div class="py-8">
+            <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                {paginatedPosts.map((post) => <BlogCard post={post} />)}
+            </div>
+            {
+                paginatedPosts.length === 0 && (
+                    <p class="text-center text-gray-500 py-8">
+                        No posts found.
+                    </p>
+                )
+            }
+            {
+                totalPages > 1 && (
+                    <nav class="flex justify-center gap-2 py-8">
+                        {Array.from({ length: totalPages }, (_, i) => (
+                            <a
+                                href={`?page=${i + 1}`}
+                                class={`px-3 py-1 rounded ${page === i + 1 ? "bg-blue-500 text-white" : "bg-gray-200"}`}
+                            >
+                                {i + 1}
+                            </a>
+                        ))}
+                    </nav>
+                )
+            }
+        </div>
+    </div>
+</BaseLayout>

@@ -1,0 +1,175 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SectionHeader from "../../components/academics/SectionHeader.astro";
+import ResourceItem from "../../components/academics/ResourceItem.astro";
+import { academicsSample } from "../../data/academics/sample";
+
+const { resources = [] } = academicsSample;
+
+const headerContent = {
+  eyebrow: "Academics",
+  title: "Academic FAQ",
+  description:
+    "Answers to common questions about curricula, course selection, assessments, resources and student support.",
+};
+
+/**
+ * Lightweight FAQ list for the Academics section.
+ * Keep answers concise and link to internal pages where appropriate.
+ */
+const faqs = [
+  {
+    id: "curriculum-track",
+    question: "What curricula do you offer (AP vs State Board)?",
+    answer:
+      "We offer both the Advanced Placement (AP) pathway and the State Board curriculum. The AP pathway provides college-level coursework and exam preparation for students aiming for university credit, while the State Board curriculum follows the local/state syllabus and prepares students for board examinations. Visit the AP and State Board curriculum pages for full details.",
+    links: [
+      { text: "AP Curriculum", href: "/academics/ap-curriculum" },
+      { text: "State Board Curriculum", href: "/academics/state-board-curriculum" },
+    ],
+  },
+  {
+    id: "course-selection",
+    question: "How do students choose between AP and State courses?",
+    answer:
+      "Course selection is based on student interests, prior attainment and long-term goals. Counselors and subject teachers will advise on prerequisites and suitability. Many students take a mix of both pathways where appropriate. Contact academic counseling for a one-to-one consultation.",
+    links: [{ text: "Student support & counseling", href: "/academics/support" }],
+  },
+  {
+    id: "grade-mapping",
+    question: "Which grades are eligible for AP courses?",
+    answer:
+      "AP courses are typically offered to senior students (Grades 11–12) though exceptional students in Grade 10 may be considered on a case-by-case basis. Check each course page for the grade mapping and prerequisites.",
+    links: [{ text: "Grade pages", href: "/academics/grade/11" }],
+  },
+  {
+    id: "assessments",
+    question: "How are assessments and exams organized?",
+    answer:
+      "Assessments include regular formative tests, term exams and mock examinations for AP-style preparation. Exam windows and important dates are published in the Academic Calendar and on subject pages. For board exam guidance, see the State Board curriculum page.",
+    links: [{ text: "Academic calendar", href: "/academics/academic-calendar" }],
+  },
+  {
+    id: "resources",
+    question: "Where can I download syllabi and sample papers?",
+    answer:
+      "Syllabi, past papers and topic handouts are available on the Resources page and individual course pages. Use the Resources hub to filter by subject or grade and download files directly.",
+    links: [{ text: "Resources & downloads", href: "/academics/resources" }],
+  },
+  {
+    id: "enrolment",
+    question: "How do I enroll in an AP course or request a course change?",
+    answer:
+      "Enrollment typically requires a teacher recommendation or meeting prerequisites. Consult the admissions office or your counselor for placement. Course changes early in the term may be allowed depending on timetable availability and teacher approval.",
+    links: [{ text: "Admissions", href: "/admissions" }, { text: "Student support", href: "/academics/support" }],
+  },
+  {
+    id: "safety",
+    question: "What safety and lab protocols apply to science courses?",
+    answer:
+      "Laboratory safety is mandatory for all practical classes. Students must follow the published safety guidelines and wear appropriate PPE for lab work. See the lab safety policy in the resources section for details.",
+    links: [{ text: "Laboratory safety guidelines", href: "/academics/resources" }],
+  },
+  {
+    id: "special-needs",
+    question: "How do I request exam accommodations or special educational support?",
+    answer:
+      "Students with documented needs should contact the academic office with supporting documentation. The school reviews each request and provides reasonable accommodations where appropriate (e.g., extra time, separate room, assistive technology).",
+    links: [{ text: "Student support & services", href: "/academics/support" }],
+  },
+];
+
+/**
+ * Pull a few helpful resource items that are likely useful in the FAQ sidebar.
+ * Heuristic: choose resources that mention 'syllabus', 'sample', 'handout', or 'guidelines'.
+ */
+const helpfulResources = resources
+  .filter((r) => {
+    if (!r || !r.title) return false;
+    const t = String(r.title).toLowerCase();
+    const id = String(r.id || "").toLowerCase();
+    return (
+      t.includes("syllabus") ||
+      t.includes("sample") ||
+      t.includes("handout") ||
+      t.includes("guidelines") ||
+      id.includes("syllabus") ||
+      id.includes("sample") ||
+      id.includes("handout") ||
+      id.includes("guidelines")
+    );
+  })
+  .slice(0, 6);
+---
+<BaseLayout>
+  <main class="site-container px-4 py-12">
+    <SectionHeader content={headerContent} />
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+      <section class="lg:col-span-2 space-y-6">
+        <div class="p-6 rounded-lg border border-black bg-background/90">
+          <h3 class="text-h4 mb-2">Frequently asked questions</h3>
+          <p class="text-sm opacity-90 mb-4">Below are answers to common questions about our academic programmes. If you don't find what you need, contact the academic office.</p>
+
+          <div class="space-y-3">
+            {faqs.map((faq, idx) => (
+              <details class="p-4 rounded border border-black bg-background/80" id={faq.id} open={idx === 0}>
+                <summary class="cursor-pointer text-base font-semibold mb-2">{faq.question}</summary>
+                <div class="mt-2 text-sm opacity-90">
+                  <p class="mb-3">{faq.answer}</p>
+                  {faq.links && faq.links.length ? (
+                    <ul class="list-inside list-disc text-sm">
+                      {faq.links.map((l) => (
+                        <li><a class="underline" href={l.href}>{l.text}</a></li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+
+        <div class="p-6 rounded-lg border border-black bg-background/90">
+          <h4 class="text-h5 mb-2">Still have questions?</h4>
+          <p class="text-sm opacity-90 mb-3">Contact the academic office or your student's homeroom teacher. For counseling or accommodations requests, use the Student Support page.</p>
+          <div class="flex gap-3">
+            <a class="inline-flex items-center px-4 py-2 rounded bg-primary text-white" href="/academics/support">Get support</a>
+            <a class="inline-flex items-center px-4 py-2 rounded border border-black bg-background/90" href="/contact">Contact office</a>
+          </div>
+        </div>
+      </section>
+
+      <aside class="lg:col-span-1 space-y-6">
+        <div class="p-4 rounded-lg border border-black bg-background/90">
+          <h5 class="text-h6 mb-2">Quick links</h5>
+          <ul class="list-inside list-disc text-sm opacity-90">
+            <li><a class="underline" href="/academics">Academics hub</a></li>
+            <li><a class="underline" href="/academics/resources">Resources & downloads</a></li>
+            <li><a class="underline" href="/academics/academic-calendar">Academic calendar</a></li>
+            <li><a class="underline" href="/academics/support">Student support</a></li>
+          </ul>
+        </div>
+
+        <div class="p-4 rounded-lg border border-black bg-background/90">
+          <h5 class="text-h6 mb-2">Helpful downloads</h5>
+          {helpfulResources && helpfulResources.length ? (
+            <div class="space-y-3">
+              {helpfulResources.map((r) => (
+                <ResourceItem resource={r} />
+              ))}
+            </div>
+          ) : (
+            <p class="opacity-80 text-sm">No quick downloads found. Visit the <a class="underline" href="/academics/resources">Resources</a> page for full downloads.</p>
+          )}
+        </div>
+
+        <div class="p-4 rounded-lg border border-black bg-background/90">
+          <h5 class="text-h6 mb-2">Need immediate help?</h5>
+          <p class="text-sm opacity-90 mb-3">For urgent academic issues or exam queries, contact the academic office directly during office hours.</p>
+          <a class="inline-flex items-center px-3 py-2 rounded border border-black bg-background/90" href="/contact">Contact academic office</a>
+        </div>
+      </aside>
+    </div>
+  </main>
+</BaseLayout>

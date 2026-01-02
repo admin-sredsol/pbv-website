@@ -1,0 +1,100 @@
+---
+import Button from "../ui/Button.astro";
+import { getTextColor } from "../../utils/styleUtils";
+import type { ThemeColor } from "../../utils/styleUtils";
+
+export interface Subject {
+  slug?: string;
+  title: string;
+  description?: string;
+  apEligible?: boolean;
+  grades?: (string | number)[];
+  icon?: string; // optional icon name if you have an icon system
+}
+
+export interface Props {
+  /**
+   * Render a single card when `subject` is provided.
+   * Render a list/grid when `subjects` is provided.
+   */
+  subject?: Subject;
+  subjects?: Subject[];
+  /**
+   * Background theme context (used for text coloring)
+   */
+  background?: ThemeColor;
+  /**
+   * When rendering a list, allow overriding the grid classes
+   */
+  gridClass?: string;
+}
+
+const {
+  subject,
+  subjects = [],
+  background = "base",
+  gridClass = "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+} = Astro.props as Props;
+
+const textColor = getTextColor(background);
+---
+
+{ /* If a subjects array is passed, render a simple responsive grid (SubjectList) */ }
+{subjects && subjects.length > 0 ? (
+  <section>
+    <div class="site-container px-4">
+      <div class:list={["grid gap-6", gridClass]}>
+        {subjects.map((s) => (
+          <article class="p-6 rounded-lg border border-black bg-background/90 flex flex-col h-full">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h3 class:list={["text-h5 mb-1", textColor]}>{s.title}</h3>
+                {s.description && <p class="text-sm opacity-90">{s.description}</p>}
+              </div>
+
+              <div class="text-sm text-right">
+                {s.apEligible && (
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-primary/10 text-primary mr-2">AP</span>
+                )}
+                {s.grades && <div class="opacity-80 text-xs">Grades: {s.grades.join(", ")}</div>}
+              </div>
+            </div>
+
+            <div class="mt-auto flex items-center justify-between">
+              {s.slug ? (
+                <Button href={`/academics/subject/${s.slug}`} variant="ghostLight">View subject</Button>
+              ) : (
+                <span class="text-sm opacity-70">No subject page</span>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+) : subject ? (
+  /* Single SubjectCard rendering */
+  <article class="p-6 rounded-lg border border-black bg-background/90 max-w-3xl">
+    <div class="flex items-start justify-between mb-3">
+      <div>
+        <h3 class:list={["text-h4 mb-1", textColor]}>{subject.title}</h3>
+        {subject.description && <p class="text-base opacity-90">{subject.description}</p>}
+      </div>
+
+      <div class="text-sm text-right">
+        {subject.apEligible && <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-primary/10 text-primary mr-2">AP</span>}
+        {subject.grades && <div class="opacity-80 text-xs">Grades: {subject.grades.join(", ")}</div>}
+      </div>
+    </div>
+
+    <div class="mt-6 flex items-center gap-3">
+      {subject.slug ? (
+        <Button href={`/academics/subject/${subject.slug}`}>Learn more</Button>
+      ) : (
+        <span class="text-sm opacity-70">Details coming soon</span>
+      )}
+    </div>
+  </article>
+) : (
+  <p class="opacity-70">No subjects available.</p>
+)}

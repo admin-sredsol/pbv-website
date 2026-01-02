@@ -1,0 +1,44 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import MediaCard from "../components/gallery/MediaCard.astro";
+import InnerHero from "../components/sections/InnerHero.astro";
+import { listR2Files } from "../utils/r2";
+
+const bucket = "website-gallery";
+let photos = await listR2Files(bucket, "photos/");
+photos = photos.filter((photo) => !photo.key.endsWith("/"));
+import heroBg from "../assets/InnerHero-bg.jpg"; // adjust path as needed
+---
+
+<BaseLayout>
+    <InnerHero
+        content={{
+            title: "Gallery",
+            description: "A collection of our best moments.",
+            backgroundImage: heroBg,
+            overlayOpacity: 0.6,
+        }}
+    />
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 py-24">
+        {
+            photos.map((photo) => {
+                // Create a readable label from the filename
+                const label = photo.key
+                    .replace(/^photos\//, "")
+                    .replace(/\.[^/.]+$/, "")
+                    .replace(/[-_]/g, " ");
+                return (
+                    <MediaCard
+                        type="photo"
+                        src={photo.url}
+                        alt={label}
+                        title={label}
+                        aspect="aspect-square"
+                        className="bg-white shadow rounded-lg"
+                    />
+                );
+            })
+        }
+    </div>
+</BaseLayout>

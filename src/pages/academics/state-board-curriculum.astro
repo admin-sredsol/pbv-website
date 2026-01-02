@@ -1,0 +1,285 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SectionHeader from "../../components/academics/SectionHeader.astro";
+import CurriculumGrid from "../../components/academics/CurriculumGrid.astro";
+import CourseCard from "../../components/academics/CourseCard.astro";
+import GradeAccordion from "../../components/academics/GradeAccordion.astro";
+import ResourceItem from "../../components/academics/ResourceItem.astro";
+import AcademicCalendarWidget from "../../components/academics/AcademicCalendarWidget.astro";
+import { academicsSample } from "../../data/academics/sample";
+
+/**
+ * This page lists State Board curriculum overview, courses and related resources.
+ * Fixes applied:
+ * - Robust gradeItems generation (collect grades from subjects safely).
+ * - headerContent constructed as a const-compatible shape for SectionHeader.
+ * - Removed invalid `key` prop on anchors (Astro warns about unknown HTML attributes).
+ */
+
+const {
+    courses = [],
+    resources = [],
+    events = [],
+    subjects = [],
+} = academicsSample as any;
+
+/* Select state-board courses (case-insensitive) */
+const stateCourses = (courses || []).filter(
+    (c: any) => String(c?.type || "").toLowerCase() === "state",
+);
+
+/* Resources that likely relate to state board content (heuristic) */
+const stateResources = (resources || []).filter((r: any) => {
+    const title = (r?.title || "").toString().toLowerCase();
+    const subj = (r?.subject || "").toString().toLowerCase();
+    return (
+        title.includes("state") ||
+        subj.includes("state") ||
+        title.includes("grade")
+    );
+});
+
+/**
+ * Build gradeItems from subjects mapping.
+ * We collect unique grade identifiers from subject.grade arrays and normalize them to strings,
+ * then sort numerically when possible and fall back to locale compare for labeled grades.
+ */
+const gradeSet = new Set<string>();
+
+if (Array.isArray(subjects)) {
+    subjects.forEach((s: any) => {
+        if (!s) return;
+        const grades = s.grades;
+        if (Array.isArray(grades)) {
+            grades.forEach((g: any) => {
+                if (g === undefined || g === null) return;
+                // Normalize numbers and strings
+                if (typeof g === "number") {
+                    gradeSet.add(String(g));
+                    return;
+                }
+                const sg = String(g).trim();
+                if (sg) gradeSet.add(sg);
+            });
+        }
+    });
+}
+
+// Fallback: if no grades found in subjects, attempt to glean from courses/resources
+if (gradeSet.size === 0) {
+    (courses || []).forEach((c: any) => {
+        if (c?.grade !== undefined && c?.grade !== null)
+            gradeSet.add(String(c.grade));
+    });
+    (resources || []).forEach((r: any) => {
+        if (r?.grade !== undefined && r?.grade !== null)
+            gradeSet.add(String(r.grade));
+    });
+}
+
+// If still empty, provide default grades 1-12
+if (gradeSet.size === 0) {
+    for (let i = 1; i <= 12; i++) gradeSet.add(String(i));
+}
+
+/* Create stable sorted grades: numeric ascending first, then labeled grades */
+const grades = Array.from(gradeSet)
+    .map((g) => String(g))
+    .sort((a, b) => {
+        const na = Number(a);
+        const nb = Number(b);
+        if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+        if (!Number.isNaN(na)) return -1;
+        if (!Number.isNaN(nb)) return 1;
+        return a.localeCompare(b, undefined, { numeric: true });
+    });
+
+const gradeItems = grades.map((g) => ({
+    grade: g,
+    title:
+        Number(g) && !Number.isNaN(Number(g))
+            ? `Grade ${g} overview`
+            : String(g),
+    summary: `Core subjects and learning outcomes for grade ${g}.`,
+    details: `<p>Subjects typically include Mathematics, English, Science and Social Studies aligned to the state board syllabus. Check subject pages for topic breakdowns and downloadable resources.</p>`,
+}));
+
+/* Section header content — variant matches allowed union in SectionHeader */
+const headerContent = {
+    eyebrow: "State Board",
+    title: "State Board Curriculum",
+    description:
+        "Our State Board programme follows the prescribed state syllabus across grades with structured assessment and board exam support.",
+    button: {
+        text: "View resources",
+        link: "/academics/resources",
+        variant: "ghostLight",
+    },
+} as const;
+---
+
+<BaseLayout>
+    <main class="site-container px-4 py-12">
+        <SectionHeader content={headerContent} />
+
+        <section class="mt-8">
+            <div class="mb-6">
+                <h3 class="text-h4">State Board Program Overview</h3>
+                <p class="mt-2 text-sm opacity-90">
+                    The State Board curriculum emphasizes mastery of
+                    foundational concepts across subjects with clear progression
+                    by grade. We support students with regular assessments,
+                    revision sessions and board-exam coaching.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-6">
+                    <div
+                        class="p-6 rounded-lg border border-black bg-background/90"
+                    >
+                        <h4 class="text-h5 mb-2">Grade-by-grade curriculum</h4>
+                        <p class="text-sm opacity-90 mb-4">
+                            Browse the grade overview to understand what
+                            students learn at each level. Expand each grade to
+                            see summary and topics.
+                        </p>
+                        <GradeAccordion items={gradeItems} />
+                    </div>
+
+                    <div
+                        class="p-6 rounded-lg border border-black bg-background/90"
+                    >
+                        <h4 class="text-h5 mb-2">
+                            State Board Course Catalogue
+                        </h4>
+                        <p class="text-sm opacity-90 mb-4">
+                            Courses aligned to the state board syllabus. Click a
+                            course to view the syllabus and instructor details.
+                        </p>
+
+                        {
+                            stateCourses && stateCourses.length ? (
+                                <div class="site-container px-0">
+                                    <div class="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                                        {stateCourses.map((c: any) => {
+                                            // compute slug: prefer id, then code, then slugified title
+                                            const slug = c?.id
+                                                ? String(c.id).trim()
+                                                : c?.code
+                                                  ? String(c.code).trim()
+                                                  : String(c?.title || "")
+                                                        .toLowerCase()
+                                                        .trim()
+                                                        .replace(/\s+/g, "-");
+                                            return (
+                                                <a
+                                                    href={`/academics/state-board-curriculum/${slug}`}
+                                                    class="block no-underline"
+                                                >
+                                                    <CourseCard
+                                                        course={c}
+                                                        background="base"
+                                                    />
+                                                </a>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div class="p-4 rounded border border-black bg-background/80">
+                                    <p class="opacity-80">
+                                        No state-board courses are listed in the
+                                        sample data yet.
+                                    </p>
+                                </div>
+                            )
+                        }
+                    </div>
+                </div>
+
+                <aside class="lg:col-span-1 space-y-6">
+                    <div
+                        class="p-6 rounded-lg border border-black bg-background/90"
+                    >
+                        <h5 class="text-h6 mb-2">Board Exam Support</h5>
+                        <p class="text-sm opacity-90 mb-3">
+                            We provide targeted revision weeks, past-paper
+                            practice and examiner-style feedback to prepare
+                            students for state board examinations.
+                        </p>
+                        <a
+                            class="inline-flex items-center px-3 py-2 rounded bg-primary text-white"
+                            href="/academics/resources">Exam resources</a
+                        >
+                    </div>
+
+                    <div
+                        class="p-6 rounded-lg border border-black bg-background/90"
+                    >
+                        <h5 class="text-h6 mb-2">Key resources</h5>
+                        {
+                            stateResources && stateResources.length ? (
+                                <div class="space-y-3">
+                                    {stateResources.map((r: any) => (
+                                        <ResourceItem resource={r} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <p class="opacity-80 text-sm">
+                                    No state-specific resources in sample data;
+                                    check the general resources page for
+                                    downloads.
+                                </p>
+                            )
+                        }
+                    </div>
+
+                    <div
+                        class="p-6 rounded-lg border border-black bg-background/90"
+                    >
+                        <h5 class="text-h6 mb-2">Contact & Guidance</h5>
+                        <p class="text-sm opacity-90 mb-3">
+                            For subject-level guidance or board-exam queries,
+                            contact the academic office or the subject teacher.
+                        </p>
+                        <a
+                            class="inline-flex items-center px-3 py-2 rounded border border-black bg-background/90"
+                            href="/contact">Contact academic office</a
+                        >
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <section class="mt-10">
+            <AcademicCalendarWidget events={events} />
+        </section>
+
+        <section class="mt-10">
+            <div class="p-6 rounded-lg border border-black bg-background/90">
+                <h4 class="text-h5 mb-2">
+                    How our State Board pathway complements AP
+                </h4>
+                <p class="text-sm opacity-90">
+                    Our dual offering ensures students can follow the state
+                    board sequence while taking advantage of enrichment
+                    opportunities. Counselors work with families to determine
+                    the best pathway for each student.
+                </p>
+                <div class="mt-4 flex gap-3">
+                    <a
+                        href="/academics/ap-curriculum"
+                        class="inline-flex items-center px-4 py-2 rounded bg-primary text-white"
+                        >Explore AP pathway</a
+                    >
+                    <a
+                        href="/admissions"
+                        class="inline-flex items-center px-4 py-2 rounded border border-black bg-background/90"
+                        >Admissions</a
+                    >
+                </div>
+            </div>
+        </section>
+    </main>
+</BaseLayout>

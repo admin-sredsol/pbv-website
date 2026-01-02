@@ -1,0 +1,231 @@
+---
+import Button from "../ui/Button.astro";
+import {
+    getTextColor,
+    getBackgroundColor,
+    getPaddingClass,
+} from "../../utils/styleUtils";
+import type { ThemeColor, PaddingSize } from "../../utils/styleUtils";
+
+export interface Resource {
+    id?: string;
+    title: string;
+    fileUrl?: string;
+    type?: "pdf" | "doc" | "ppt" | "zip" | "other";
+    size?: string; // human readable, e.g. "1.2 MB"
+    subject?: string;
+    grade?: string | number;
+    description?: string;
+    public?: boolean;
+    updatedAt?: string; // ISO date or human string
+}
+
+export interface Props {
+    /**
+     * Render a single resource when `resource` is provided,
+     * or a list when `resources` is provided.
+     */
+    resource?: Resource;
+    resources?: Resource[];
+    background?: ThemeColor;
+    padding?: PaddingSize;
+    paddingTop?: PaddingSize;
+    paddingBottom?: PaddingSize;
+    /**
+     * Optional grid classes for the list layout.
+     */
+    gridClass?: string;
+}
+
+const {
+    resource,
+    resources = [],
+    background = "base",
+    padding,
+    paddingTop,
+    paddingBottom,
+    gridClass = "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+} = Astro.props as Props;
+
+const textColor = getTextColor(background);
+const bgColor = getBackgroundColor(background);
+const paddingClass = getPaddingClass({ padding, paddingTop, paddingBottom });
+
+function typeLabel(type?: string) {
+    if (!type) return "File";
+    return type.toUpperCase();
+}
+
+function ariaLabelFor(r: Resource) {
+    const sizePart = r.size ? `, ${r.size}` : "";
+    const subj = r.subject ? `${r.subject} — ` : "";
+    return `${subj}${r.title}${sizePart}`;
+}
+---
+
+{/** Render a list when `resources` provided */}
+{
+    resources && resources.length > 0 ? (
+        <section class:list={["relative", bgColor, paddingClass]}>
+            <div class="site-container px-4">
+                <div class:list={["grid gap-6", gridClass]}>
+                    {resources.map((res) => (
+                        <article
+                            class="p-4 rounded-lg border border-black bg-background/90 flex flex-col h-full"
+                            role="article"
+                            aria-labelledby={`resource-${res.id || res.title}`}
+                        >
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="min-w-0">
+                                    <h4
+                                        id={`resource-${res.id || res.title}`}
+                                        class:list={[
+                                            "text-h5 font-semibold",
+                                            textColor,
+                                        ]}
+                                    >
+                                        {res.title}
+                                    </h4>
+                                    {res.subject || res.grade ? (
+                                        <div class="mt-1 text-sm opacity-80">
+                                            {res.subject && (
+                                                <span class="mr-3">
+                                                    {res.subject}
+                                                </span>
+                                            )}
+                                            {res.grade && (
+                                                <span class="mr-3">
+                                                    Grade {res.grade}
+                                                </span>
+                                            )}
+                                        </div>
+                                    ) : null}
+                                </div>
+
+                                <div class="text-xs text-right opacity-80">
+                                    {res.type && (
+                                        <div class="mb-1">
+                                            {typeLabel(res.type)}
+                                        </div>
+                                    )}
+                                    {res.size && <div>{res.size}</div>}
+                                </div>
+                            </div>
+
+                            {res.description && (
+                                <p
+                                    class:list={[
+                                        "text-base",
+                                        textColor,
+                                        "opacity-90",
+                                        "mb-4",
+                                    ]}
+                                >
+                                    {res.description}
+                                </p>
+                            )}
+
+                            <div class="mt-auto flex items-center justify-between gap-3">
+                                <div class="text-sm opacity-80">
+                                    {res.updatedAt && (
+                                        <div>Updated: {res.updatedAt}</div>
+                                    )}
+                                    {!res.updatedAt && res.public === false && (
+                                        <div>Private resource</div>
+                                    )}
+                                </div>
+
+                                <div>
+                                    {res.fileUrl ? (
+                                        <a
+                                            href={res.fileUrl}
+                                            class="inline-block"
+                                            download
+                                            rel="noopener noreferrer"
+                                            target="_blank"
+                                            aria-label={`Download ${ariaLabelFor(res)}`}
+                                        >
+                                            <Button variant="primary">
+                                                Download
+                                            </Button>
+                                        </a>
+                                    ) : (
+                                        <span class="text-sm opacity-70">
+                                            No file
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+            </div>
+        </section>
+    ) : resource ? (
+        /* Single resource rendering */
+        <div class:list={["relative", bgColor, paddingClass]}>
+            <div class="site-container px-4">
+                <article class="p-6 rounded-lg border border-black bg-background/90 max-w-3xl">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="min-w-0">
+                            <h3 class:list={["text-h4", textColor]}>
+                                {resource.title}
+                            </h3>
+                            {resource.subject && (
+                                <div class="text-sm opacity-80 mt-1">
+                                    {resource.subject}
+                                </div>
+                            )}
+                        </div>
+
+                        <div class="text-sm opacity-80 text-right">
+                            {resource.type && (
+                                <div class="mb-1">
+                                    {typeLabel(resource.type)}
+                                </div>
+                            )}
+                            {resource.size && <div>{resource.size}</div>}
+                        </div>
+                    </div>
+
+                    {resource.description && (
+                        <p class:list={["mb-4", textColor, "opacity-90"]}>
+                            {resource.description}
+                        </p>
+                    )}
+
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm opacity-80">
+                            {resource.grade && (
+                                <div>Grade: {resource.grade}</div>
+                            )}
+                            {resource.updatedAt && (
+                                <div>Updated: {resource.updatedAt}</div>
+                            )}
+                        </div>
+
+                        <div>
+                            {resource.fileUrl ? (
+                                <a
+                                    href={resource.fileUrl}
+                                    download
+                                    rel="noopener noreferrer"
+                                    target="_blank"
+                                    aria-label={`Download ${ariaLabelFor(resource)}`}
+                                >
+                                    <Button variant="primary">Download</Button>
+                                </a>
+                            ) : (
+                                <span class="text-sm opacity-70">
+                                    No file available
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    ) : (
+        <p class="opacity-70">No resources available.</p>
+    )
+}

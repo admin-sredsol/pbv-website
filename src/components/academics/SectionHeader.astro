@@ -1,0 +1,61 @@
+---
+import Eyebrow from "../ui/Eyebrow.astro";
+import Button from "../ui/Button.astro";
+import type { PaddingSize, ThemeColor } from "../../utils/styleUtils";
+import {
+  getBackgroundColor,
+  getTextColor,
+  getPaddingClass,
+} from "../../utils/styleUtils";
+
+export interface ContentProps {
+  eyebrow?: string;
+  title?: string;
+  description?: string;
+  button?: {
+    text: string;
+    link: string;
+    variant?: "primary" | "secondary" | "ghostLight" | "ghostDark";
+  };
+}
+
+export interface Props {
+  content?: ContentProps;
+  background?: ThemeColor;
+  padding?: PaddingSize;
+  paddingTop?: PaddingSize;
+  paddingBottom?: PaddingSize;
+}
+
+const {
+  content = {},
+  background = "base",
+} = Astro.props as Props;
+
+const { eyebrow, title, description, button } = content;
+
+const bgColor = getBackgroundColor(background);
+const textColor = getTextColor(background);
+const paddingClass = getPaddingClass({
+  padding: Astro.props.padding,
+  paddingTop: Astro.props.paddingTop,
+  paddingBottom: Astro.props.paddingBottom,
+});
+---
+
+{(title || description || eyebrow || button) && (
+  <div class:list={["text-center", bgColor, paddingClass, "max-w-3xl mx-auto"]}>
+    {eyebrow && <Eyebrow text={eyebrow} background={background} />}
+    {title && <h2 class:list={[textColor, "mt-2"]}>{title}</h2>}
+    {description && (
+      <p class:list={["mt-4", textColor, "opacity-90"]}>{description}</p>
+    )}
+    {button && (
+      <div class="mt-6">
+        <Button href={button.link} variant={button.variant || "primary"}>
+          {button.text}
+        </Button>
+      </div>
+    )}
+  </div>
+)}

@@ -1,0 +1,282 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import SectionHeader from "../../../components/academics/SectionHeader.astro";
+import ResourceItem from "../../../components/academics/ResourceItem.astro";
+import CurriculumGrid from "../../../components/academics/CurriculumGrid.astro";
+import { academicsSample } from "../../../data/academics/sample";
+
+/**
+ * Provide static paths for AP course pages.
+ * We use course `id` when available; fall back to a slugified title or code.
+ */
+export async function getStaticPaths() {
+    const { courses = [] } = academicsSample;
+    const apCourses = courses.filter(
+        (c: any) => String((c as any).type || "").toLowerCase() === "ap",
+    );
+
+    function toSlug(c: any) {
+        if (c.id) return String(c.id).trim();
+        if (c.code) return String(c.code).trim();
+        if (c.title)
+            return String(c.title).toLowerCase().trim().replace(/\s+/g, "-");
+        return "";
+    }
+
+    const slugs = Array.from(
+        new Set(apCourses.map((c: any) => toSlug(c)).filter(Boolean)),
+    );
+    if (slugs.length === 0) {
+        // Fallback so Astro has at least one path to generate locally
+        return [{ params: { course: "ap-chemistry" } }];
+    }
+    return slugs.map((course) => ({ params: { course } }));
+}
+
+const { courses = [], resources = [], faculty = [] } = academicsSample;
+
+const { course: courseParam } = Astro.params || {};
+const courseSlug = String(courseParam || "")
+    .trim()
+    .toLowerCase();
+
+/**
+ * Try to resolve the course by:
+ *  - id
+ *  - code
+ *  - slugified title
+ */
+const course =
+    courses.find((c) => String(c.id || "").toLowerCase() === courseSlug) ||
+    courses.find((c) => String(c.code || "").toLowerCase() === courseSlug) ||
+    courses.find(
+        (c) =>
+            String(c.title || "")
+                .toLowerCase()
+                .trim()
+                .replace(/\s+/g, "-") === courseSlug,
+    ) ||
+    null;
+
+const pageTitle = course
+    ? `${course.title} — AP Course`
+    : "AP Course not found";
+const pageDescription =
+    course?.summary || "AP course details, syllabus and resources.";
+
+/* Related resources heuristics: subject or title includes course keywords or id/code */
+// No fileUrl normalization here — ResourceItem accepts optional fileUrl so pass resources through unchanged.
+
+const relatedResources = course
+    ? resources.filter((r) => {
+          if (!r) return false;
+          const s = (r.subject || "").toLowerCase();
+          const t = (r.title || "").toLowerCase();
+          const id = String(course.id || "").toLowerCase();
+          const code = String(course.code || "").toLowerCase();
+          const title = String(course.title || "").toLowerCase();
+          return (
+              s === id ||
+              s === title ||
+              t.includes(id) ||
+              t.includes(code) ||
+              t.includes(title) ||
+              (r.grade && String(r.grade) === String(course.grade))
+          );
+      })
+    : [];
+
+/* Faculty heuristics: match subjects array or tags to course id/title */
+const relatedFaculty = course
+    ? faculty.filter((f) => {
+          const subs = (f.subjects || []).map((s) => String(s).toLowerCase());
+          const id = String(course.id || "").toLowerCase();
+          const title = String(course.title || "").toLowerCase();
+          return subs.includes(id) || subs.some((s) => title.includes(s));
+      })
+    : [];
+---
+
+<BaseLayout>
+    <main class="site-container px-4 py-12">
+        <SectionHeader
+            content={{
+                eyebrow: "Academics",
+                title: pageTitle,
+                description: pageDescription,
+            }}
+        />
+
+        {
+            course ? (
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+                    <section class="lg:col-span-2 space-y-6">
+                        <div class="p-6 rounded-lg border border-black bg-background/90">
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <h2 class="text-h3 mb-1">{course.title}</h2>
+                                    {course.code && (
+                                        <div class="text-sm opacity-80 mb-2">
+                                            {course.code}
+                                        </div>
+                                    )}
+                                    {course.grade && (
+                                        <div class="text-sm opacity-80 mb-2">
+                                            Grade: {course.grade}
+                                        </div>
+                                    )}
+                                    {course.summary && (
+                                        <p class="opacity-90">
+                                            {course.summary}
+                                        </p>
+                                    )}
+                                </div>
+                                <div class="text-right">
+                                    {course.teacher && (
+                                        <div class="text-sm opacity-80">
+                                            Instructor
+                                        </div>
+                                    )}
+                                    {course.teacher && (
+                                        <div class="font-medium">
+                                            {course.teacher}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div class="mt-6">
+                                <h4 class="text-h5 mb-2">
+                                    Syllabus & Downloads
+                                </h4>
+                                {course.syllabusUrl ? (
+                                    <a
+                                        class="inline-flex items-center px-3 py-2 rounded border border-black bg-background/90"
+                                        href={course.syllabusUrl}
+                                    >
+                                        Download syllabus
+                                    </a>
+                                ) : (
+                                    <p class="opacity-80">
+                                        Syllabus not available for this course.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div class="p-6 rounded-lg border border-black bg-background/90">
+                            <h4 class="text-h5 mb-2">
+                                Course-related resources
+                            </h4>
+                            {relatedResources && relatedResources.length ? (
+                                <div class="space-y-3">
+                                    {relatedResources.map((r) => (
+                                        <ResourceItem resource={r} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <p class="opacity-80">
+                                    No specific resources found for this course.
+                                </p>
+                            )}
+                        </div>
+
+                        <div class="p-6 rounded-lg border border-black bg-background/90">
+                            <h4 class="text-h5 mb-2">Related courses</h4>
+                            <p class="opacity-90 mb-4">
+                                Explore other AP offerings that complement this
+                                course.
+                            </p>
+                            <CurriculumGrid
+                                courses={courses.filter(
+                                    (c) =>
+                                        String(c.type).toLowerCase() === "ap" &&
+                                        c.id !== course.id,
+                                )}
+                            />
+                        </div>
+                    </section>
+
+                    <aside class="lg:col-span-1 space-y-6">
+                        <div class="p-4 rounded-lg border border-black bg-background/90">
+                            <h5 class="text-h6 mb-2">Instructor & Support</h5>
+                            {relatedFaculty && relatedFaculty.length ? (
+                                relatedFaculty.map((f) => (
+                                    <div class="p-3 rounded border border-black bg-background/80">
+                                        <div class="font-medium">{f.name}</div>
+                                        {f.qualifications && (
+                                            <div class="text-sm opacity-80">
+                                                {f.qualifications}
+                                            </div>
+                                        )}
+                                        {f.email && (
+                                            <div class="text-xs opacity-70 mt-1">
+                                                {f.email}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                            ) : (
+                                <p class="opacity-80">
+                                    No faculty information linked to this course
+                                    in sample data.
+                                </p>
+                            )}
+                        </div>
+
+                        <div class="p-4 rounded-lg border border-black bg-background/90">
+                            <h5 class="text-h6 mb-2">Quick links</h5>
+                            <ul class="list-inside list-disc text-sm opacity-90">
+                                <li>
+                                    <a class="underline" href="/academics">
+                                        Academics hub
+                                    </a>
+                                </li>
+                                <li>
+                                    <a
+                                        class="underline"
+                                        href="/academics/ap-curriculum"
+                                    >
+                                        AP curriculum index
+                                    </a>
+                                </li>
+                                <li>
+                                    <a
+                                        class="underline"
+                                        href="/academics/resources"
+                                    >
+                                        Resources
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </aside>
+                </div>
+            ) : (
+                <div class="site-container px-4 py-12">
+                    <div class="max-w-3xl mx-auto text-center">
+                        <h2 class="text-h3 mb-4">Course not found</h2>
+                        <p class="opacity-90 mb-6">
+                            We couldn't find an AP course matching{" "}
+                            <code>{courseParam}</code>.
+                        </p>
+                        <div class="flex items-center justify-center gap-3">
+                            <a
+                                class="inline-flex items-center px-4 py-2 rounded bg-primary text-white"
+                                href="/academics/ap-curriculum"
+                            >
+                                Browse AP courses
+                            </a>
+                            <a
+                                class="inline-flex items-center px-4 py-2 rounded border border-black bg-background/90"
+                                href="/academics"
+                            >
+                                Academics hub
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            )
+        }
+    </main>
+</BaseLayout>

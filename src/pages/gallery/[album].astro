@@ -1,0 +1,68 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import InnerHero from "../../components/sections/InnerHero.astro";
+import { listR2Albums, listR2AlbumFiles } from "../../utils/r2";
+import heroBg from "../../assets/InnerHero-bg.jpg"; // Adjust path as needed
+import Breadcrumbs from "../../components/ui/Breadcrumbs.astro";
+import { getBreadcrumbs } from "../../utils/getBreadcrumbs";
+
+export async function getStaticPaths() {
+    const bucket = "website-gallery";
+    const albumsPrefix = "albums/";
+    const albumPrefixes = await listR2Albums(bucket, albumsPrefix);
+
+    // Each album prefix is like "albums/ILS/"
+    // We want to extract the album name (e.g., "ILS")
+    return albumPrefixes.map((prefix) => ({
+        params: { album: prefix.replace(/^albums\//, "").replace(/\/$/, "") },
+    }));
+}
+
+const { album } = Astro.params;
+const bucket = "website-gallery";
+const albumPrefix = `albums/${album}/`;
+
+const photos = await listR2AlbumFiles(bucket, albumPrefix);
+const label = album.replace(/[-_]/g, " ");
+const breadcrumbs = getBreadcrumbs(Astro.url.pathname);
+---
+
+<BaseLayout>
+    <InnerHero
+        content={{
+            title: label,
+            description: `Photos from the ${label} album.`,
+            backgroundImage: heroBg,
+            overlayOpacity: 0.6,
+        }}
+    />
+
+    <div class="max-w-6xl mx-auto px-4 py-6">
+        <Breadcrumbs crumbs={breadcrumbs} />
+        {
+            photos.length === 0 ? (
+                <p class="text-center text-gray-500">
+                    No photos found in this album.
+                </p>
+            ) : (
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    {photos.map((photo) => (
+                        <div class="overflow-hidden rounded-lg bg-white shadow aspect-square flex flex-col">
+                            <img
+                                src={photo.url}
+                                alt={photo.key}
+                                class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                                loading="lazy"
+                            />
+                            <div class="p-2 text-center text-sm text-gray-700">
+                                {photo.key
+                                    .replace(albumPrefix, "")
+                                    .replace(/\.[^/.]+$/, "")}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )
+        }
+    </div>
+</BaseLayout>

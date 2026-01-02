@@ -1,0 +1,72 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SplitPanelComponent from "../components/sections/SplitPanel.astro";
+
+const leftPanelContent = {
+    eyebrow: "Our Mission",
+    headline: "Empowering Students",
+    subheadline: "A Commitment to Excellence",
+    description:
+        "We believe in nurturing every student's potential through innovative teaching and a supportive environment. Our mission is to empower students to become lifelong learners and responsible citizens.",
+    image: {
+        src: "/images/mission.jpg",
+        alt: "Empowering Students",
+    },
+    buttons: [
+        { text: "Learn More", link: "/about", variant: "primary" },
+        { text: "Contact Us", link: "/contact", variant: "secondary" },
+    ],
+};
+
+const rightPanelContent = {
+    eyebrow: "Our Campus",
+    headline: "A Place to Grow",
+    subheadline: "Modern Facilities & Green Spaces",
+    description:
+        "Our campus offers state-of-the-art facilities, vibrant classrooms, and beautiful outdoor spaces designed to inspire creativity and collaboration.",
+    image: {
+        src: "/images/campus.jpg",
+        alt: "Our Campus",
+    },
+    buttons: [
+        { text: "View Gallery", link: "/gallery", variant: "ghostLight" },
+    ],
+};
+import InnerHero from "../components/sections/InnerHero.astro";
+import heroBg from "../assets/InnerHero-bg.jpg";
+import Breadcrumbs from "../components/ui/Breadcrumbs.astro";
+import { getBreadcrumbs } from "../utils/getBreadcrumbs";
+const breadcrumbs = getBreadcrumbs(Astro.url.pathname);
+---
+
+<BaseLayout>
+    <!-- <h1 class="text-4xl font-bold text-center mt-12 mb-8">Split Panel Demo</h1> -->
+    <InnerHero
+        content={{
+            title: "About Our School",
+            description:
+                "we are committed to nurturing young minds and fostering a love for learning",
+            backgroundImage: heroBg,
+            overlayOpacity: 0.6,
+        }}
+    />
+    <div class="max-w-full mx-auto px-4 py-6">
+        <Breadcrumbs crumbs={breadcrumbs} />
+        <div class="mb-24">
+            <SplitPanelComponent
+                content={leftPanelContent}
+                imagePosition="left"
+                background="light"
+                padding="xl"
+            />
+        </div>
+        <div class="mb-24">
+            <SplitPanelComponent
+                content={rightPanelContent}
+                imagePosition="right"
+                background="base"
+                padding="xl"
+            />
+        </div>
+    </div>
+</BaseLayout>

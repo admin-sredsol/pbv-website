@@ -1,0 +1,232 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SectionHeader from "../../components/academics/SectionHeader.astro";
+import Button from "../../components/ui/Button.astro";
+import { Cpu, Lightbulb, Activity } from "lucide-astro";
+
+/**
+ * Simple Academics -> Innovation page
+ * Uses the same design principles as other academics pages:
+ * - SectionHeader for page intro
+ * - Two feature sections with image + text (grid)
+ * - Small CTAs to guide users to further pages/resources
+ */
+
+const headerContent = {
+    eyebrow: "Academics",
+    title: "Innovation & Technology",
+    description:
+        "Our Innovation program encourages curiosity, hands-on making and project-based learning. From the Atal Tinkering Lab (ATL) to interactive learning spaces, students design, build and iterate — preparing them for a rapidly changing world.",
+    button: {
+        text: "View Curriculum",
+        link: "/academics",
+        variant: "primary",
+    },
+} as const;
+---
+
+<BaseLayout title="Innovation & Technology">
+    <main class="site-container px-4 py-12">
+        <!-- Page header -->
+        <SectionHeader content={headerContent} />
+
+        <!-- ATL Section -->
+        <section class="mt-12 mb-16">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <!-- Image -->
+                <div class="order-1 md:order-1">
+                    <img
+                        src="https://images.unsplash.com/photo-1581092795364-8b37b3f9e0d9?w=1200&q=80&auto=format&fit=crop"
+                        alt="Students working in a school innovation lab"
+                        class="w-full rounded-lg shadow-md object-cover h-64 md:h-80"
+                    />
+                </div>
+
+                <!-- Content -->
+                <div class="order-2 md:order-2">
+                    <div class="text-eyebrow mb-2">
+                        Atal Tinkering Lab (ATL)
+                    </div>
+                    <h2 class="text-h3 mb-4">Hands-on innovation lab</h2>
+                    <p class="text-base opacity-90 mb-4">
+                        Our ATL provides tools, mentorship and a safe space
+                        where students explore robotics, electronics, 3D
+                        printing and rapid prototyping. The lab fosters
+                        experimentation, iterative design and collaborative
+                        problem solving — core skills for future-ready learners.
+                    </p>
+
+                    <ul class="space-y-3 mb-6">
+                        <li class="flex items-start gap-3">
+                            <span
+                                class="w-8 h-8 flex items-center justify-center rounded bg-primary text-white"
+                            >
+                                <Cpu size={18} />
+                            </span>
+                            <div>
+                                <div class="font-medium">Tools & equipment</div>
+                                <div class="text-sm opacity-80">
+                                    Electronics kits, 3D printers, &
+                                    microcontrollers
+                                </div>
+                            </div>
+                        </li>
+
+                        <li class="flex items-start gap-3">
+                            <span
+                                class="w-8 h-8 flex items-center justify-center rounded bg-primary text-white"
+                            >
+                                <Lightbulb size={18} />
+                            </span>
+                            <div>
+                                <div class="font-medium">Mentored projects</div>
+                                <div class="text-sm opacity-80">
+                                    Guided challenges that move from idea to
+                                    prototype
+                                </div>
+                            </div>
+                        </li>
+
+                        <li class="flex items-start gap-3">
+                            <span
+                                class="w-8 h-8 flex items-center justify-center rounded bg-primary text-white"
+                            >
+                                <Activity size={18} />
+                            </span>
+                            <div>
+                                <div class="font-medium">
+                                    Competitions & showcases
+                                </div>
+                                <div class="text-sm opacity-80">
+                                    Opportunities to present projects at fairs
+                                    and tournaments
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <div>
+                        <Button
+                            href="/academics/resources"
+                            variant="primary"
+                            size="sm"
+                        >
+                            Explore ATL Programs
+                        </Button>
+                        <a href="/contact" class="ml-4 text-sm underline"
+                            >Request a visit</a
+                        >
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Learning Space Section (reversed layout on wide screens) -->
+        <section class="mt-8 mb-16">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <!-- Content (left on desktop) -->
+                <div class="order-2 md:order-1">
+                    <div class="text-eyebrow mb-2">
+                        Interactive Learning Space
+                    </div>
+                    <h2 class="text-h3 mb-4">
+                        Activity-based & project-led learning
+                    </h2>
+                    <p class="text-base opacity-90 mb-4">
+                        Our interactive spaces are designed to support inquiry,
+                        teamwork and real-world problem solving. Curriculum is
+                        delivered through hands-on activities and multi-week
+                        projects that connect subjects and build transferable
+                        skills.
+                    </p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                        <div class="p-4 rounded-lg border bg-background/90">
+                            <div class="font-medium mb-1">
+                                Activity-based Learning
+                            </div>
+                            <div class="text-sm opacity-80 mb-2">
+                                Short, focused activities that teach concepts
+                                through doing.
+                            </div>
+                            <Button
+                                href="https://activities.prathibhavidyalayam.edu.in"
+                                target="_blank"
+                                variant="primary"
+                                size="sm"
+                            >
+                                Explore ILS-Activities
+                            </Button>
+                        </div>
+
+                        <div class="p-4 rounded-lg border bg-background/90">
+                            <div class="font-medium mb-1">
+                                Project-based Learning
+                            </div>
+                            <div class="text-sm opacity-80 mb-2">
+                                Cross-disciplinary projects that culminate in a
+                                public showcase.
+                            </div>
+                            <Button
+                                href="https://pbl.prathibhavidyalayam.edu.in"
+                                target="_blank"
+                                variant="primary"
+                                size="sm"
+                            >
+                                <span>ILS-Projects</span>
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <Button
+                            href="/academics/subjects"
+                            variant="ghostDark"
+                            size="sm"
+                        >
+                            See Related Subjects
+                        </Button>
+                        <a
+                            href="/academics/ap-curriculum"
+                            class="ml-4 text-sm underline">AP Pathway</a
+                        >
+                    </div>
+                </div>
+
+                <!-- Image -->
+                <div class="order-1 md:order-2">
+                    <img
+                        src="https://images.unsplash.com/photo-1555949963-aa79dcee981d?w=1200&q=80&auto=format&fit=crop"
+                        alt="Students collaborating on a classroom project"
+                        class="w-full rounded-lg shadow-md object-cover h-64 md:h-80"
+                    />
+                </div>
+            </div>
+        </section>
+
+        <!-- Closing note / resources -->
+        <section class="mt-12">
+            <div
+                class="rounded-lg p-6 border bg-background/90 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+            >
+                <div>
+                    <div class="font-medium">Want to learn more?</div>
+                    <div class="text-sm opacity-90">
+                        Explore our syllabi, ATL schedule and project showcases
+                        for details on student participation and timings.
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <Button
+                        href="/academics/resources"
+                        variant="primary"
+                        size="sm">Download Resources</Button
+                    >
+                    <Button href="/contact" variant="ghostDark" size="sm"
+                        >Contact Us</Button
+                    >
+                </div>
+            </div>
+        </section>
+    </main>
+</BaseLayout>

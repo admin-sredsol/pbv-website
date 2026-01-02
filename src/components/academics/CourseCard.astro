@@ -1,0 +1,76 @@
+---
+import type { ThemeColor } from "../../utils/styleUtils";
+import { getTextColor } from "../../utils/styleUtils";
+import Button from "../ui/Button.astro";
+
+export interface Course {
+  id?: string;
+  title: string;
+  code?: string;
+  grade?: string | number;
+  type?: "AP" | "State" | string;
+  summary?: string;
+  teacher?: string;
+  syllabusUrl?: string;
+  tags?: string[];
+}
+
+export interface Props {
+  course: Course;
+  background?: ThemeColor;
+}
+
+const { course, background = "base" } = Astro.props as Props;
+const textColor = getTextColor(background);
+---
+
+<article class="p-6 rounded-lg border border-black bg-background/90">
+  <div class="flex items-start justify-between">
+    <div class="min-w-0">
+      <h3 class:list={["text-h5 font-semibold", textColor]}>
+        {course.title}
+      </h3>
+
+      <div class="mt-1 flex flex-wrap items-center text-sm opacity-90">
+        {course.code && <span class="mr-3">{course.code}</span>}
+        {course.grade && <span class="mr-3">Grade {course.grade}</span>}
+        {course.type && (
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-primary/10 text-primary">
+            {course.type}
+          </span>
+        )}
+      </div>
+    </div>
+
+    {course.teacher && (
+      <div class="ml-4 text-sm text-right">
+        <div class:list={[textColor, "font-medium"]}>{course.teacher}</div>
+        <div class="opacity-80 text-xs">Instructor</div>
+      </div>
+    )}
+  </div>
+
+  {course.summary && (
+    <p class:list={["mt-4 text-base", textColor, "opacity-90"]}>
+      {course.summary}
+    </p>
+  )}
+
+  {course.tags && course.tags.length > 0 && (
+    <div class="mt-4 flex flex-wrap gap-2">
+      {course.tags.map((tag) => (
+        <span class="text-xs px-2 py-1 rounded bg-surface/60 text-muted">
+          {tag}
+        </span>
+      ))}
+    </div>
+  )}
+
+  <div class="mt-6 flex items-center gap-3">
+    {course.syllabusUrl ? (
+      <Button href={course.syllabusUrl} variant="ghostLight">View Syllabus</Button>
+    ) : (
+      <span class="text-sm opacity-70">Syllabus not available</span>
+    )}
+  </div>
+</article>

@@ -1,0 +1,118 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SectionHeader from "../../components/academics/SectionHeader.astro";
+import AcademicCalendarWidget from "../../components/academics/AcademicCalendarWidget.astro";
+import { academicsSample } from "../../data/academics/sample";
+
+const { events = [] } = academicsSample;
+
+const headerContent = {
+    eyebrow: "Academics",
+    title: "Academic Calendar",
+    description:
+        "Important dates, exam windows, revision weeks and school events. Download individual events or the full calendar as an .ics file.",
+};
+---
+
+<BaseLayout>
+    <main class="site-container px-4 py-12">
+        <SectionHeader content={headerContent} />
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+            <section class="lg:col-span-2 space-y-6">
+                <div
+                    class="p-6 rounded-lg border border-black bg-background/90"
+                >
+                    <h3 class="text-h4 mb-2">Calendar overview</h3>
+                    <p class="text-sm opacity-90 mb-4">
+                        The academic calendar contains term dates, assessment
+                        windows, mock exams and special events. Use the export
+                        buttons to download events or add them to your personal
+                        calendar.
+                    </p>
+
+                    <AcademicCalendarWidget
+                        events={events}
+                        calendarName="PBV School Academic Calendar"
+                    />
+                </div>
+
+                <div
+                    class="p-6 rounded-lg border border-black bg-background/90"
+                >
+                    <h4 class="text-h5 mb-2">How to use the calendar</h4>
+                    <ul class="list-inside list-disc text-sm opacity-90">
+                        <li>
+                            Download the full calendar (.ics) to import into
+                            Google Calendar, Apple Calendar or Outlook.
+                        </li>
+                        <li>
+                            Export a single event if you only need specific
+                            dates (e.g., exam windows).
+                        </li>
+                        <li>
+                            Check with subject teachers for subject-specific
+                            schedules that may be published separately.
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <aside class="lg:col-span-1 space-y-6">
+                <div
+                    class="p-4 rounded-lg border border-black bg-background/90"
+                >
+                    <h5 class="text-h6 mb-2">Quick links</h5>
+                    <ul class="list-inside list-disc text-sm opacity-90">
+                        <li>
+                            <a class="underline" href="/academics"
+                                >Academics hub</a>
+                        </li>
+                        <li>
+                            <a class="underline" href="/academics/resources"
+                                >Resources & downloads</a>
+                        </li>
+                        <li>
+                            <a class="underline" href="/academics/support"
+                                >Student support</a>
+                        </li>
+                        <li>
+                            <a class="underline" href="/academics/faq"
+                                >Academic FAQ</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div
+                    class="p-4 rounded-lg border border-black bg-background/90"
+                >
+                    <h5 class="text-h6 mb-2">Need help?</h5>
+                    <p class="text-sm opacity-90 mb-3">
+                        For questions about exam schedules, calendar conflicts
+                        or to request timetable adjustments, contact the
+                        academic office or visit the Student Support page.
+                    </p>
+                    <a
+                        class="inline-flex items-center px-3 py-2 rounded bg-primary text-white"
+                        href="/academics/support">Contact support</a
+                    >
+                </div>
+
+                <div
+                    class="p-4 rounded-lg border border-black bg-background/90"
+                >
+                    <h5 class="text-h6 mb-2">Downloads</h5>
+                    <p class="text-sm opacity-90 mb-3">
+                        If you prefer a printable overview, download the school
+                        calendar or individual event .ics files from the
+                        calendar widget above.
+                    </p>
+                    <a
+                        class="inline-flex items-center px-3 py-2 rounded border border-black bg-background/90"
+                        href="/academics/resources">View resources</a
+                    >
+                </div>
+            </aside>
+        </div>
+    </main>
+</BaseLayout>

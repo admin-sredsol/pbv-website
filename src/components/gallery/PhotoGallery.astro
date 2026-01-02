@@ -1,0 +1,48 @@
+---
+import MediaCard from "./MediaCard.astro";
+import type { ThemeColor } from "../../utils/styleUtils";
+
+export interface Photo {
+    key: string;
+    url: string;
+    alt?: string;
+}
+
+export interface Props {
+    photos: Photo[];
+    columns?: number;
+    gap?: string;
+    rounded?: string;
+    background?: ThemeColor;
+    className?: string;
+}
+
+const {
+    photos = [],
+    columns = 3,
+    gap = "gap-4",
+    rounded = "rounded-lg",
+    background = "",
+    className = "",
+} = Astro.props;
+---
+
+<section class={`w-full ${background} ${className}`}>
+    <div
+        class={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-${columns} ${gap}`}
+    >
+        {
+            photos.map((photo) => (
+                <MediaCard
+                    type="photo"
+                    src={photo.url}
+                    alt={photo.alt || photo.key}
+                    title={photo.key}
+                    background={background}
+                    rounded={rounded}
+                    aspect="aspect-square"
+                />
+            ))
+        }
+    </div>
+</section>

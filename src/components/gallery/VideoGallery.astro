@@ -1,0 +1,50 @@
+---
+import MediaCard from "./MediaCard.astro";
+import type { ThemeColor } from "../../utils/styleUtils";
+
+export interface Video {
+    key: string;
+    url: string;
+    poster?: string;
+    title?: string;
+}
+
+export interface Props {
+    videos: Video[];
+    columns?: number;
+    gap?: string;
+    rounded?: string;
+    background?: ThemeColor;
+    className?: string;
+    videoClassName?: string;
+}
+
+const {
+    videos = [],
+    columns = 2,
+    gap = "gap-6",
+    rounded = "rounded-lg",
+    background = "",
+    className = "",
+    videoClassName = "",
+} = Astro.props;
+---
+
+<section class={`w-full ${background} ${className}`}>
+    <div class={`grid grid-cols-1 md:grid-cols-${columns} ${gap}`}>
+        {
+            videos.map((video) => (
+                <MediaCard
+                    type="video"
+                    src={video.url}
+                    poster={video.poster}
+                    title={video.title || video.key}
+                    background={background}
+                    rounded={rounded}
+                    aspect="aspect-video"
+                    className={videoClassName}
+                />
+            ))
+        }
+    </div>
+</section>

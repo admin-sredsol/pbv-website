@@ -1,0 +1,295 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import SectionHeader from "../../../components/academics/SectionHeader.astro";
+import CurriculumGrid from "../../../components/academics/CurriculumGrid.astro";
+import ResourceItem from "../../../components/academics/ResourceItem.astro";
+import { academicsSample } from "../../../data/academics/sample";
+
+export async function getStaticPaths() {
+    // Collect subject slugs from the sample data so Astro can prerender subject pages
+    const { subjects = [] } = academicsSample;
+    const slugs = subjects
+        .map((s) => (s && s.slug ? String(s.slug).trim() : ""))
+        .filter(Boolean);
+    const unique = Array.from(new Set(slugs));
+
+    // Return an array of { params: { slug } } for pre-rendering
+    return unique.map((slug) => ({ params: { slug } }));
+}
+
+const { subjects = [], courses = [], resources = [] } = academicsSample;
+
+const { slug } = Astro.params || {};
+const subject = subjects.find((s) => String(s.slug) === String(slug));
+
+const pageTitle = subject
+    ? `${subject.title} — Academics`
+    : "Subject not found";
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>{pageTitle}</title>
+        <meta
+            name="description"
+            content={subject?.description || "Subject details"}
+        />
+    </head>
+    <body>
+        <BaseLayout>
+            <main class="site-container px-4 py-12">
+                {
+                    subject ? (
+                        <>
+                            <SectionHeader
+                                content={{
+                                    eyebrow: "Academics",
+                                    title: subject.title,
+                                    description: subject.description,
+                                    button: undefined,
+                                }}
+                            />
+
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+                                <section class="lg:col-span-2">
+                                    <div class="mb-6">
+                                        <h3 class="text-h4 mb-2">
+                                            About {subject.title}
+                                        </h3>
+                                        {subject.description && (
+                                            <p class="opacity-90">
+                                                {subject.description}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div class="mb-8">
+                                        <h4 class="text-h5 mb-3">
+                                            Related courses
+                                        </h4>
+                                        {/* Find related courses by matching tags or slug/title heuristics */}
+                                        {(() => {
+                                            const key =
+                                                subject.title.toLowerCase();
+                                            const related = courses.filter(
+                                                (c) => {
+                                                    // match by tags (case-insensitive), id includes slug, or title includes subject title
+                                                    const hasTag = (
+                                                        c.tags || []
+                                                    ).some(
+                                                        (t) =>
+                                                            String(
+                                                                t || "",
+                                                            ).toLowerCase() ===
+                                                                key ||
+                                                            String(t || "")
+                                                                .toLowerCase()
+                                                                .includes(key),
+                                                    );
+                                                    const inId =
+                                                        c.id &&
+                                                        String(c.id)
+                                                            .toLowerCase()
+                                                            .includes(
+                                                                String(
+                                                                    subject.slug,
+                                                                ).toLowerCase(),
+                                                            );
+                                                    const inTitle =
+                                                        c.title &&
+                                                        String(c.title)
+                                                            .toLowerCase()
+                                                            .includes(key);
+                                                    return (
+                                                        hasTag ||
+                                                        inId ||
+                                                        inTitle
+                                                    );
+                                                },
+                                            );
+                                            if (!related.length) {
+                                                return (
+                                                    <p class="opacity-80">
+                                                        No related courses
+                                                        listed yet.
+                                                    </p>
+                                                );
+                                            }
+                                            return (
+                                                <CurriculumGrid
+                                                    courses={related}
+                                                />
+                                            );
+                                        })()}
+                                    </div>
+
+                                    <div class="mb-8">
+                                        <h4 class="text-h5 mb-3">
+                                            Grade mapping
+                                        </h4>
+                                        {subject.grades &&
+                                        subject.grades.length ? (
+                                            <div class="flex flex-wrap gap-2">
+                                                {subject.grades.map((g) => (
+                                                    <a
+                                                        class="inline-block px-3 py-1 rounded border border-black bg-background/90"
+                                                        href={`/academics/grade/${g}`}
+                                                    >
+                                                        Grade {g}
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p class="opacity-80">
+                                                Grade mapping not specified.
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div>
+                                        <h4 class="text-h5 mb-3">
+                                            Faculty & support
+                                        </h4>
+                                        <p class="opacity-90">
+                                            For faculty details, see the main
+                                            Faculty page or contact the
+                                            department via admissions.
+                                        </p>
+                                    </div>
+                                </section>
+
+                                <aside class="lg:col-span-1 space-y-6">
+                                    <div class="p-4 rounded-lg border border-black bg-background/90">
+                                        <h5 class="text-h6 mb-2">
+                                            Quick links
+                                        </h5>
+                                        <ul class="list-inside list-disc text-sm opacity-90">
+                                            <li>
+                                                <a
+                                                    class="underline"
+                                                    href="/academics"
+                                                >
+                                                    Academics hub
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a
+                                                    class="underline"
+                                                    href="/academics/subjects"
+                                                >
+                                                    All subjects
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a
+                                                    class="underline"
+                                                    href="/academics/resources"
+                                                >
+                                                    Resources & downloads
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a
+                                                    class="underline"
+                                                    href="/academics/academic-calendar"
+                                                >
+                                                    Academic calendar
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="p-4 rounded-lg border border-black bg-background/90">
+                                        <h5 class="text-h6 mb-2">
+                                            Resources for {subject.title}
+                                        </h5>
+                                        {(() => {
+                                            const key1 =
+                                                subject.slug &&
+                                                String(
+                                                    subject.slug,
+                                                ).toLowerCase();
+                                            const key2 =
+                                                subject.title &&
+                                                String(
+                                                    subject.title,
+                                                ).toLowerCase();
+                                            const relatedResources =
+                                                resources.filter((r) => {
+                                                    if (!r) return false;
+                                                    const subj = (
+                                                        r.subject || ""
+                                                    ).toLowerCase();
+                                                    return (
+                                                        subj === key1 ||
+                                                        subj === key2 ||
+                                                        (r.title || "")
+                                                            .toLowerCase()
+                                                            .includes(key2)
+                                                    );
+                                                });
+
+                                            if (!relatedResources.length) {
+                                                return (
+                                                    <p class="opacity-80">
+                                                        No subject-specific
+                                                        resources. Browse the{" "}
+                                                        <a
+                                                            class="underline"
+                                                            href="/academics/resources"
+                                                        >
+                                                            resources page
+                                                        </a>
+                                                        .
+                                                    </p>
+                                                );
+                                            }
+
+                                            return (
+                                                <div class="space-y-3">
+                                                    {relatedResources.map(
+                                                        (res) => (
+                                                            <ResourceItem
+                                                                resource={res}
+                                                            />
+                                                        ),
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                </aside>
+                            </div>
+                        </>
+                    ) : (
+                        <div class="site-container px-4 py-12">
+                            <div class="max-w-3xl mx-auto text-center">
+                                <h2 class="text-h3 mb-4">Subject not found</h2>
+                                <p class="opacity-90 mb-6">
+                                    We couldn't find a subject matching the URL{" "}
+                                    <code>{slug}</code>.
+                                </p>
+                                <div class="flex items-center justify-center gap-3">
+                                    <a
+                                        class="inline-flex items-center px-4 py-2 rounded bg-primary text-white"
+                                        href="/academics/subjects"
+                                    >
+                                        Browse subjects
+                                    </a>
+                                    <a
+                                        class="inline-flex items-center px-4 py-2 rounded border border-black bg-background/90"
+                                        href="/academics"
+                                    >
+                                        Academics hub
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                }
+            </main>
+        </BaseLayout>
+    </body>
+</html>
